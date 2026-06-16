@@ -1,23 +1,10 @@
-import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
-import healthRoutes from "./src/routes/healthRoutes.js";
+import app from "./src/app.js";
+import { env } from "./src/config/env.js";
 
-dotenv.config();
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-app.get("/", (req, res) => {
-  res.send("Backend is running");
-});
-
-app.use("/api", healthRoutes);
-
-const PORT = 3000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(env.port, () => {
+  console.log(
+    `FinFlow AI server running on http://localhost:${env.port} in ${env.nodeEnv} mode`
+  );
 });

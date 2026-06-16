@@ -1,6 +1,8 @@
+import { successResponse } from "../utils/apiResponse.js";
+
 export const healthCheck = (req, res) => {
-  res.json({
-    success: true,
-    message: "API is healthy",
+  return successResponse(res, "API is healthy", {
+    app: "FinFlow AI",
+    status: "running",
   });
 };
