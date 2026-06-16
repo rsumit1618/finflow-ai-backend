@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import healthRoutes from "./routes/healthRoutes.js";
+import authRoutes from "./modules/auth/routes/authRoutes.js";
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import {
   globalErrorHandler,
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api", healthRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
