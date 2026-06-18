@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
-import healthRoutes from "./routes/healthRoutes.js";
 import authRoutes from "./modules/auth/routes/authRoutes.js";
+import categoryRoutes from "./modules/category/routes/categoryRoutes.js";
+import expenseRoutes from "./modules/expense/routes/expenseRoutes.js";
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import {
   globalErrorHandler,
@@ -18,8 +19,9 @@ app.get("/", (req, res) => {
   res.send("FinFlow AI Backend is running");
 });
 
-app.use("/api", healthRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoryRoutes);
+app.use("/api/expenses", expenseRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
