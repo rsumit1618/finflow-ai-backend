@@ -1,18 +1,18 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
-  email: z.email("Invalid email"),
+  name: z.string().trim().min(3, "Name must be at least 3 characters"),
+  email: z.email("Invalid email").toLowerCase(),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const loginSchema = z.object({
-  email: z.email("Invalid email"),
+  email: z.email("Invalid email").toLowerCase(),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const updateProfileSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters"),
+  name: z.string().trim().min(3, "Name must be at least 3 characters"),
 });
 
 export const changePasswordSchema = z.object({

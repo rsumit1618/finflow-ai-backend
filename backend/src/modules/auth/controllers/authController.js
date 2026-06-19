@@ -1,7 +1,4 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import { successResponse } from "../../../utils/apiResponse.js";
-import { env } from "../../../config/env.js";
 import {
   changePasswordSchema,
   loginSchema,
@@ -23,7 +20,7 @@ export const registerUser = async (req, res, next) => {
 
     const result = await registerUserService(validatedData);
 
-    return successResponse(res, "User registered successfully", result, 201);
+    return successResponse(res, result, "User registered successfully", 201);
   } catch (error) {
     next(error);
   }
@@ -35,7 +32,7 @@ export const loginUser = async (req, res, next) => {
 
     const result = await loginUserService(validatedData);
 
-    return successResponse(res, "Login successful", result);
+    return successResponse(res, result, "Login successful");
   } catch (error) {
     next(error);
   }
@@ -45,9 +42,9 @@ export const getProfile = async (req, res, next) => {
   try {
     const user = await getProfileService(req.user.userId);
 
-    return successResponse(res, "Profile fetched successfully", {
+    return successResponse(res, {
       user,
-    });
+    }, "Profile fetched successfully");
   } catch (error) {
     next(error);
   }
@@ -59,9 +56,9 @@ export const updateProfile = async (req, res, next) => {
 
     const user = await updateProfileService(req.user.userId, validatedData);
 
-    return successResponse(res, "Profile updated successfully", {
+    return successResponse(res, {
       user,
-    });
+    }, "Profile updated successfully");
   } catch (error) {
     next(error);
   }
@@ -73,7 +70,7 @@ export const changePassword = async (req, res, next) => {
 
     await changePasswordService(req.user.userId, validatedData);
 
-    return successResponse(res, "Password changed successfully");
+    return successResponse(res, null, "Password changed successfully");
   } catch (error) {
     next(error);
   }
@@ -81,7 +78,7 @@ export const changePassword = async (req, res, next) => {
 
 export const logoutUser = async (req, res, next) => {
   try {
-    return successResponse(res, "Logout successful");
+    return successResponse(res, null, "Logout successful");
   } catch (error) {
     next(error);
   }

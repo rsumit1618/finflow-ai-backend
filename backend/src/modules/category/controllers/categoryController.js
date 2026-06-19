@@ -6,18 +6,32 @@ import {
   updateCategoryService,
   deleteCategoryService,
 } from "../services/categoryService.js";
-import { createCategorySchema } from "../validators/categoryValidator.js";
+import {
+  createCategorySchema,
+  updateCategorySchema,
+} from "../validators/categoryValidator.js";
+import { AppError } from "../../../utils/AppError.js";
+
+const parseId = (value) => {
+  const id = Number(value);
+
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new AppError("Invalid resource id", 400);
+  }
+
+  return id;
+};
 
 export const createCategory = async (req, res, next) => {
   try {
     const validatedData = createCategorySchema.parse(req.body);
 
-    const category = await createCategoryService(validatedData);
+    const category = await createCategoryService(req.user.userId, validatedData);
 
     return successResponse(
       res,
-      "Category created successfully",
       category,
+      "Category created successfully",
       201
     );
   } catch (error) {
@@ -27,12 +41,12 @@ export const createCategory = async (req, res, next) => {
 
 export const getCategories = async (req, res, next) => {
   try {
-    const categories = await getCategoriesService();
+    const categories = await getCategoriesService(req.user.userId);
 
     return successResponse(
       res,
-      "Categories fetched successfully",
-      categories
+      categories,
+      "Categories fetched successfully"
     );
   } catch (error) {
     next(error);
@@ -41,12 +55,15 @@ export const getCategories = async (req, res, next) => {
 
 export const getCategory = async (req, res, next) => {
   try {
-    const category = await getCategoryByIdService(Number(req.params.id));
+    const category = await getCategoryByIdService(
+      parseId(req.params.id),
+      req.user.userId
+    );
 
     return successResponse(
       res,
-      "Category fetched successfully",
-      category
+      category,
+      "Category fetched successfully"
     );
   } catch (error) {
     next(error);
@@ -55,15 +72,18 @@ export const getCategory = async (req, res, next) => {
 
 export const updateCategory = async (req, res, next) => {
   try {
+    const validatedData = updateCategorySchema.parse(req.body);
+
     const category = await updateCategoryService(
-      Number(req.params.id),
-      req.body
+      parseId(req.params.id),
+      req.user.userId,
+      validatedData
     );
 
     return successResponse(
       res,
-      "Category updated successfully",
-      category
+      category,
+      "Category updated successfully"
     );
   } catch (error) {
     next(error);
@@ -72,12 +92,12 @@ export const updateCategory = async (req, res, next) => {
 
 export const deleteCategory = async (req, res, next) => {
   try {
-    await deleteCategoryService(Number(req.params.id));
+    await deleteCategoryService(parseId(req.params.id), req.user.userId);
 
     return successResponse(
       res,
-      "Category deleted successfully",
-      null
+      null,
+      "Category deleted successfully"
     );
   } catch (error) {
     next(error);

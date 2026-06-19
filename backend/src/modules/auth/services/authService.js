@@ -9,12 +9,13 @@ import {
   updateUserById,
   updateUserPassword,
 } from "../../../repositories/userRepository.js";
+import { AppError } from "../../../utils/AppError.js";
 
 export const registerUserService = async (userData) => {
   const existingUser = await findUserByEmail(userData.email);
 
   if (existingUser) {
-    throw new Error("Email already exists");
+    throw new AppError("Email already exists", 409);
   }
 
   const passwordHash = await bcrypt.hash(userData.password, 10);
@@ -51,7 +52,7 @@ export const loginUserService = async (loginData) => {
   const user = await findUserByEmail(loginData.email);
 
   if (!user) {
-    throw new Error("Invalid email or password");
+    throw new AppError("Invalid email or password", 401);
   }
 
   const isPasswordValid = await bcrypt.compare(
@@ -60,7 +61,7 @@ export const loginUserService = async (loginData) => {
   );
 
   if (!isPasswordValid) {
-    throw new Error("Invalid email or password");
+    throw new AppError("Invalid email or password", 401);
   }
 
   const token = jwt.sign(
@@ -89,7 +90,7 @@ export const getProfileService = async (userId) => {
   const user = await findUserById(userId);
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError("User not found", 404);
   }
 
   return {
@@ -117,7 +118,7 @@ export const changePasswordService = async (userId, data) => {
   const user = await findUserById(userId);
 
   if (!user) {
-    throw new Error("User not found");
+    throw new AppError("User not found", 404);
   }
 
   const isOldPasswordValid = await bcrypt.compare(
@@ -126,7 +127,7 @@ export const changePasswordService = async (userId, data) => {
   );
 
   if (!isOldPasswordValid) {
-    throw new Error("Old password is incorrect");
+    throw new AppError("Old password is incorrect", 400);
   }
 
   const newPasswordHash = await bcrypt.hash(data.newPassword, 10);

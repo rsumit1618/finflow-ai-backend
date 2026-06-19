@@ -7,7 +7,7 @@ export const validate = (schema) => {
       return res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors: error.errors,
+        errors: error.issues || error.errors,
       });
     }
   };

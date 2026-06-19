@@ -10,3 +10,7 @@ export const successResponse = (
     data,
   });
 };
+
+export const healthResponse = (res, data) => {
+  return successResponse(res, data, "Service healthy");
+};

@@ -1,7 +1,8 @@
 import {
   createExpense,
-  findCategoryById,
+  findCategoryByIdForUser,
 } from "../../../repositories/expenseRepository.js";
+import { AppError } from "../../../utils/AppError.js";
 
 export const createExpenseService = async ({
   amount,
@@ -9,10 +10,10 @@ export const createExpenseService = async ({
   categoryId,
   userId,
 }) => {
-  const category = await findCategoryById(categoryId);
+  const category = await findCategoryByIdForUser(categoryId, userId);
 
   if (!category) {
-    throw new Error("Category not found");
+    throw new AppError("Category not found", 404);
   }
 
   return createExpense({
