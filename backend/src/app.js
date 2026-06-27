@@ -7,7 +7,7 @@ import healthRoutes from "./modules/health/routes/healthRoutes.js";
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import { corsOptions, securityHeaders } from "./middlewares/securityMiddleware.js";
 import { requestIdMiddleware } from "./middlewares/requestIdMiddleware.js";
-import appVersion from "./constants/appConstants.js"
+import { API_VERSION } from "./constants/appConstants.js";
 import {
   globalErrorHandler,
   notFoundHandler,
@@ -32,10 +32,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/expenses", expenseRoutes);
 
-app.use(`/api/${appVersion}/health`, healthRoutes);
-app.use(`/api/${appVersion}/auth`, authRoutes);
-app.use(`/api/${appVersion}/categories`, categoryRoutes);
-app.use(`/api/${appVersion}/expenses`, expenseRoutes);
+app.use(`/api/${API_VERSION}/health`, healthRoutes);
+app.use(`/api/${API_VERSION}/auth`, authRoutes);
+app.use(`/api/${API_VERSION}/categories`, categoryRoutes);
+app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);

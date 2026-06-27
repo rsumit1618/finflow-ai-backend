@@ -177,6 +177,20 @@ src/modules/uploads/
 
 ## Stage 7: AWS Free-Tier Deployment
 
+Phase 1 learning domain:
+
+```text
+heysumit.duckdns.org
+```
+
+Use this free DuckDNS subdomain for real-device Flutter testing and AWS deployment practice before buying a paid brand domain.
+
+Target Phase 1 API base URL:
+
+```text
+https://heysumit.duckdns.org/api/v1
+```
+
 TODO:
 
 - Create EC2 instance.
@@ -203,6 +217,12 @@ Interview topics:
 - Process management.
 
 ## Stage 8: Nginx + SSL + PM2
+
+Phase 1 SSL target:
+
+```text
+https://heysumit.duckdns.org
+```
 
 TODO:
 
