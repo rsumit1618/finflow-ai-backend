@@ -12,6 +12,7 @@ Use these guides before adding a new feature module, database table, repository,
 - [Add A New API Endpoint](./add-new-api.md)
 - [Validation And Error Handling](./validation-and-errors.md)
 - [API Versioning And Changing Old APIs](./api-versioning.md)
+- [Project Roadmap And Next Steps](./project-roadmap-and-next-steps.md)
 
 ## Backend Pattern
 
