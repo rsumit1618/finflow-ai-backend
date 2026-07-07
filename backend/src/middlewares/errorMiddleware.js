@@ -10,7 +10,7 @@ export const notFoundHandler = (req, res) => {
   });
 };
 
-export const globalErrorHandler = (err, req, res, _next) => {
+export const globalErrorHandler = async  (err, req, res, _next) => {
   console.error(err);
 
   Sentry.captureException(err);
