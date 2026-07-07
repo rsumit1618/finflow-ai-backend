@@ -2,7 +2,6 @@ import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 import * as Sentry from "@sentry/node";
 
-
 export const notFoundHandler = (req, res) => {
   res.status(404).json({
     success: false,
@@ -10,17 +9,9 @@ export const notFoundHandler = (req, res) => {
   });
 };
 
-export const globalErrorHandler = async  (err, req, res, _next) => {
+export const globalErrorHandler = async (err, req, res, _next) => {
   console.error(err);
 
-  Sentry.captureException(err);
-
-  try {
-    await Sentry.flush(2000);
-  } catch (e) {
-    console.error("Failed to flush Sentry:", e);
-  }
-  
   let statusCode = 500;
   let message = "Internal Server Error";
   let details;
@@ -39,6 +30,15 @@ export const globalErrorHandler = async  (err, req, res, _next) => {
   } else if (err.code === "P2025") {
     statusCode = 404;
     message = "Record not found";
+  }
+
+  if (statusCode >= 500) {
+    Sentry.captureException(err);
+    try {
+      await Sentry.flush(2000);
+    } catch (e) {
+      console.error("Failed to flush Sentry:", e);
+    }
   }
 
   res.status(statusCode).json({
