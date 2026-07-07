@@ -1,5 +1,7 @@
 import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
+import * as Sentry from "@sentry/node";
+
 
 export const notFoundHandler = (req, res) => {
   res.status(404).json({
@@ -10,6 +12,11 @@ export const notFoundHandler = (req, res) => {
 
 export const globalErrorHandler = (err, req, res, _next) => {
   console.error(err);
+
+  Sentry.captureException(err);
+
+  await Sentry.flush(2000);
+
 
   let statusCode = 500;
   let message = "Internal Server Error";
