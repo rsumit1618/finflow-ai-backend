@@ -1,46 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import 'viewmodels/auth_viewmodel.dart';
+import 'viewmodels/home_viewmodel.dart';
+import 'views/auth_screen.dart';
+import 'views/home_screen.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+void main() => runApp(const FinFlowApp());
 
-class ApiConfig {
-  static const String baseUrl = "http://localhost:3000";
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  Future<String> callHealthApi() async {
-    final response = await http.get(
-      Uri.parse("${ApiConfig.baseUrl}/api/health"),
-    );
-
-    return response.body;
-  }
+class FinFlowApp extends StatelessWidget {
+  const FinFlowApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text("AWS Learning App")),
-        body: Center(
-          child: FutureBuilder<String>(
-            future: callHealthApi(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              }
-
-              if (snapshot.hasError) {
-                debugPrint("Error: ${snapshot.error}");
-                return Text("Error: ${snapshot.error}");
-              }
-
-              return Text(snapshot.data ?? "No data");
-            },
-          ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()..checkLoginStatus()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+      ],
+      child: MaterialApp(
+        title: 'FinFlow AI',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: Consumer<AuthViewModel>(
+          builder: (context, auth, _) {
+            if (auth.isLoggedIn) {
+              return const HomeScreen();
+            }
+            return const AuthScreen();
+          },
         ),
       ),
     );
