@@ -13,6 +13,8 @@ import {
   globalErrorHandler,
   notFoundHandler,
 } from "./middlewares/errorMiddleware.js";
+import Sentry from './config/sentry.js';
+
 
 const app = express();
 
@@ -68,5 +70,7 @@ app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
+app.use(Sentry.Handlers.errorHandler());
+
 
 export default app;
