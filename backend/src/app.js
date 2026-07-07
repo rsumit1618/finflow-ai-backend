@@ -70,7 +70,6 @@ app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
-app.use(Sentry.Handlers.errorHandler());
 
 
 export default app;
