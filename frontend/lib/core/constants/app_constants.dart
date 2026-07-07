@@ -1,8 +1,9 @@
 class AppConstants {
   static const String baseUrl = 'http://16.16.204.221:3000';
 
-  static const int connectTimeout = 30;
-  static const int receiveTimeout = 30;
+  static const int connectTimeout = 60;
+  static const int receiveTimeout = 60;
+  static const int sendTimeout = 60;
 
   static const String register = '/api/auth/register';
   static const String login = '/api/auth/login';

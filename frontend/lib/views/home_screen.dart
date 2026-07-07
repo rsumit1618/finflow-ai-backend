@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🏠 FinFlow AI'),
+        title: const Text('🏠 FinFlow AI',style: TextStyle(color: Colors.white),),
         backgroundColor: Colors.deepPurple,
         actions: [
           Padding(
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               // Quick Test Buttons ke neechay
               Row(
                 children: [
@@ -183,6 +183,33 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
+              // Quick Test Buttons mein add karo
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickButton(
+                      label: '⚡ 1000 Parallel',
+                      color: Colors.purple,
+                      onTap: homeViewModel.isLoading
+                          ? null
+                          : () => homeViewModel.testPerformanceParallel(1000),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildQuickButton(
+                      label: '🔥 100 Parallel',
+                      color: Colors.teal,
+                      onTap: homeViewModel.isLoading
+                          ? null
+                          : () => homeViewModel.testPerformanceParallel(100),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
 
               // ============================================================
               // CUSTOM COUNT TEST

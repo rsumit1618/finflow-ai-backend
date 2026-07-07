@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/auth_model.dart';
 import '../constants/app_constants.dart';
 import '../storage/secure_storage.dart';
@@ -8,9 +9,14 @@ class ApiService {
   bool _isRefreshing = false;
 
   ApiService() {
+
     _dio.options.baseUrl = AppConstants.baseUrl;
     _dio.options.connectTimeout = Duration(seconds: AppConstants.connectTimeout);
     _dio.options.receiveTimeout = Duration(seconds: AppConstants.receiveTimeout);
+
+    if (!kIsWeb) {
+      _dio.options.sendTimeout = Duration(seconds: AppConstants.receiveTimeout);
+    }
 
     _dio.interceptors.add(LogInterceptor(
       request: true,
@@ -55,6 +61,13 @@ class ApiService {
         }
         _isRefreshing = false;
         return handler.next(error);
+      },
+    ));
+
+    _dio.interceptors.add(InterceptorsWrapper(
+      onResponse: (response, handler) {
+        response.extra['duration'] = DateTime.now().millisecondsSinceEpoch;
+        return handler.next(response);
       },
     ));
   }
@@ -151,6 +164,42 @@ class ApiService {
         'message': e.response?.data['message'] ?? e.message,
       };
     }
+  }
+
+  Future<Map<String, dynamic>> testPerformanceParallel(int count) async {
+    int success = 0;
+    int failure = 0;
+    List<int> responseTimes = [];
+
+    final requests = List.generate(count, (_) async {
+      try {
+        return await _dio.get('/api/auth/profile');
+      } catch (_) {
+        return null;
+      }
+    });
+
+    final results = await Future.wait<Response?>(requests);
+
+    for (final result in results) {
+      if (result?.statusCode == 200) {
+        success++;
+        responseTimes.add(result!.extra['duration'] ?? 100);
+      } else {
+        failure++;
+      }
+    }
+
+    final avgTime = responseTimes.isNotEmpty
+        ? responseTimes.reduce((a, b) => a + b) ~/ responseTimes.length
+        : 0;
+
+    return {
+      'total': count,
+      'success': success,
+      'failure': failure,
+      'avgResponseTime': avgTime,
+    };
   }
 
   Future<void> logout() async {

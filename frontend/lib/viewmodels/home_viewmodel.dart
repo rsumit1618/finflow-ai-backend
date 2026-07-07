@@ -45,13 +45,35 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
+  Future<void> testPerformanceParallel(int count) async {
+    _reset();
+    _setLoading(true);
+
+    try {
+      final result = await _api.testPerformanceParallel(count);
+
+      _successCount = result['success'] ?? 0;
+      _failureCount = result['failure'] ?? 0;
+      _avgTime = result['avgResponseTime'] ?? 0;
+      _result = '✅ Success: ${result['success']}\n'
+          '❌ Failure: ${result['failure']}\n'
+          '⏱️ Avg: ${result['avgResponseTime']}ms\n'
+          '📊 Total: ${result['total']}';
+    } catch (e) {
+      _result = '❌ Error: $e';
+      _failureCount = count;
+    }
+
+    _setLoading(false);
+  }
+
   Future<void> testPerformance(int count) async {
     _reset();
     _setLoading(true);
 
     try {
       final result = await _api.testPerformance(count).timeout(
-        const Duration(seconds: 60),
+        const Duration(seconds: 300),
         onTimeout: () {
           return {
             'success': 0,
