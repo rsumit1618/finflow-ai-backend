@@ -15,9 +15,12 @@ export const globalErrorHandler = async  (err, req, res, _next) => {
 
   Sentry.captureException(err);
 
-  await Sentry.flush(2000);
-
-
+  try {
+    await Sentry.flush(2000);
+  } catch (e) {
+    console.error("Failed to flush Sentry:", e);
+  }
+  
   let statusCode = 500;
   let message = "Internal Server Error";
   let details;

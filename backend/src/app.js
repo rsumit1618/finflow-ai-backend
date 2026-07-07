@@ -68,7 +68,11 @@ app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/categories`, categoryRoutes);
 app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 
+// Register Sentry's Express error handler
+Sentry.setupExpressErrorHandler(app);
+
 app.use(notFoundHandler);
+
 app.use(globalErrorHandler);
 
 
