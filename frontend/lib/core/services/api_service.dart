@@ -148,6 +148,24 @@ class ApiService {
     };
   }
 
+  Future<Map<String, dynamic>> test500Error() async {
+    try {
+      final response = await _dio.get('/force-error');
+      return {
+        'success': true,
+        'data': response.data,
+        'statusCode': response.statusCode,
+      };
+    } on DioException catch (e) {
+      // ✅ 500 error bhi catch hoga
+      return {
+        'success': false,
+        'message': e.response?.data['message'] ?? e.message,
+        'statusCode': e.response?.statusCode,
+      };
+    }
+  }
+
   Future<Map<String, dynamic>> callApi() async {
     try {
       final start = DateTime.now();

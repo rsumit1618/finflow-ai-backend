@@ -78,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
+              // Quick Test Buttons (updated)
               Row(
                 children: [
                   Expanded(
@@ -95,6 +96,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: homeViewModel.isLoading
                           ? null
                           : () => homeViewModel.testPerformance(10),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickButton(
+                      label: '🚀 100 Calls',
+                      color: Colors.purple,
+                      onTap: homeViewModel.isLoading
+                          ? null
+                          : () => homeViewModel.testPerformance(100),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildQuickButton(
+                      label: '💥 Test 500 Error',
+                      color: Colors.red,
+                      onTap: homeViewModel.isLoading
+                          ? null
+                          : () => homeViewModel.test500Error(),
                     ),
                   ),
                 ],

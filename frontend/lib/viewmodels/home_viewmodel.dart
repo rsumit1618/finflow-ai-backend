@@ -102,6 +102,26 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
+  Future<void> test500Error() async {
+    _reset();
+    _setLoading(true);
+
+    try {
+      final result = await _api.test500Error();
+      if (result['success']) {
+        _result = '✅ Response:\n${result['data']}';
+      } else {
+        _result = '❌ 500 Error: ${result['message']}\n'
+            'Status Code: ${result['statusCode']}';
+      }
+      _debugInfo = result.toString();
+    } catch (e) {
+      _result = '❌ Error: $e';
+    }
+
+    _setLoading(false);
+  }
+
   void _reset() {
     _successCount = 0;
     _failureCount = 0;
