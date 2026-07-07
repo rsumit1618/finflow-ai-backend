@@ -58,6 +58,10 @@ app.get("/", (req, res) => {
   res.send("FinFlow AI Backend is running");
 });
 
+app.get('/force-error', (req, res) => {
+  throw new Error('Manual 500 error for Sentry test');
+});
+
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
