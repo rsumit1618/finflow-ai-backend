@@ -1,5 +1,7 @@
 import app from "./src/app.js";
 import { env } from "./src/config/env.js";
+import * as Sentry from '@sentry/node';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 // ✅ Sentry initialize
 Sentry.init({
