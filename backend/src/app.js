@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import rateLimit from 'express-rate-limit';
 import authRoutes from "./modules/auth/routes/authRoutes.js";
 import categoryRoutes from "./modules/category/routes/categoryRoutes.js";
 import expenseRoutes from "./modules/expense/routes/expenseRoutes.js";
@@ -14,6 +15,26 @@ import {
 } from "./middlewares/errorMiddleware.js";
 
 const app = express();
+
+console.log('🔥 FORCE TEST: Rate limit loading...');
+
+// ✅ Define limiter
+const limiter = rateLimit({
+  windowMs: 10 * 1000,      // 10 seconds
+  max: 2,                   // 2 requests per 10 seconds
+  message: {
+    success: false,
+    message: 'TEST RATE LIMIT HIT'
+  },
+  statusCode: 429,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// ✅ Apply limiter (SAB SE PEHLE)
+app.use(limiter);
+
+console.log('✅ FORCE TEST: Rate limit applied');
 
 app.set("trust proxy", 1);
 
