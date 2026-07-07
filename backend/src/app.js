@@ -18,17 +18,25 @@ const app = express();
 
 console.log('🔥 FORCE TEST: Rate limit loading...');
 
-// ✅ Define limiter
 const limiter = rateLimit({
   windowMs: 10 * 1000,      // 10 seconds
   max: 2,                   // 2 requests per 10 seconds
   message: {
     success: false,
-    message: 'TEST RATE LIMIT HIT'
+    message: "TEST RATE LIMIT HIT",
   },
   statusCode: 429,
   standardHeaders: true,
   legacyHeaders: false,
+
+  // Make key stable behind proxies (first IP from x-forwarded-for)
+  keyGenerator: (req) => {
+    const xff = req.headers["x-forwarded-for"];
+    const firstIp =
+      typeof xff === "string" ? xff.split(",")[0].trim() : undefined;
+
+    return firstIp || req.ip;
+  },
 });
 
 // ✅ Apply limiter (SAB SE PEHLE)
