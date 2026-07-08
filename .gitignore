@@ -2,4 +2,5 @@
 backend/node_modules
 backend/.env
 frontend/build
-.DS_Store
+.DS_Storebackend/ecosystem.config.cjs
+backend/logs/
