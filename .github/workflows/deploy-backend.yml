@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main-backend
+  workflow_dispatch:  # 👈 Manual trigger from GitHub UI
 
 jobs:
   deploy:
