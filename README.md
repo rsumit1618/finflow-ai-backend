@@ -1,417 +1,147 @@
-﻿# FinFlow AI
+# FinFlow AI Backend
 
-FinFlow AI is a production-style personal finance SaaS project built to demonstrate full-stack mobile, backend, cloud, DevOps, security, and AI engineering skills using a free-tier-first approach.
+Production-oriented Express and Prisma API for FinFlow AI. The backend is organized by business module so multiple developers can work independently on auth, categories, expenses, and future finance features without stepping on each other.
 
-The goal is not to build only a CRUD expense tracker. The goal is to build one strong, resume-worthy project that can support expert-level interview discussions around Flutter, Node.js, PostgreSQL, AWS deployment, Docker, CI/CD, API security, file uploads, observability, encryption, SSL, and AI-powered finance features.
+## Stack
 
-## Free-Tier First Rule
-
-This project should avoid paid services while learning and building the first production version. Paid AWS services or premium tools can be planned later as upgrade paths only.
-
-Current target:
-
-- Use AWS Free Tier wherever possible.
-- Use open-source libraries.
-- Use free SSL through Let's Encrypt.
-- Avoid paid monitoring, paid DNS/CDN/security products at the beginning.
-- Design the architecture so paid services can be added later without rewriting the app.
-
-## Tech Stack
-
-### Frontend
-
-- Flutter
-- Riverpod
-- Dio
-- GoRouter
-- Flutter Secure Storage
-- Freezed
-- JSON Serializable
-- Local/offline storage
-- Responsive UI
-- Dark theme
-- Localization
-
-### Backend
-
-- Node.js
-- Express.js
-- Prisma ORM
-- PostgreSQL
+- Node.js with Express
+- PostgreSQL with Prisma ORM
 - JWT authentication
-- Refresh token flow
-- Bcrypt password hashing
-- Zod validation
-- Multer for uploads
-- Swagger/OpenAPI documentation
-- Jest and Supertest testing
+- Zod request validation
+- ESLint and Prettier for maintainable code style
 
-### Database
-
-- PostgreSQL
-- Prisma migrations
-- Seed scripts
-- Decimal money fields
-- Indexing
-- Transactions
-- Soft delete where needed
-- Audit logs for sensitive actions
-
-### AI
-
-- OpenAI API integration
-- Expense categorization
-- Spending insights
-- Monthly summaries
-- Budget suggestions
-- Natural language finance queries
-- AI cost controls
-- AI fallback handling
-
-Example:
+## Project Structure
 
 ```text
-How much did I spend on food last month?
+backend/
+|-- server.js
+|-- eslint.config.js
+|-- prisma/
+|   |-- schema.prisma
+|   `-- migrations/
+`-- src/
+    |-- app.js
+    |-- config/
+    |   |-- env.js
+    |   `-- prisma.js
+    |-- middlewares/
+    |-- modules/
+    |   |-- auth/
+    |   |-- category/
+    |   |-- expense/
+    |   `-- health/
+    |-- repositories/
+    |-- utils/
+    `-- constants/
 ```
 
-### AWS Free-Tier First
+## Module Pattern
 
-- EC2 for backend hosting
-- Nginx reverse proxy on EC2
-- RDS PostgreSQL if Free Tier is available
-- PostgreSQL on EC2 as an alternative strict-free option
-- S3 for receipts, profile photos, and exported reports
-- CloudWatch basic logs and metrics
-- IAM users, roles, and least-privilege policies
-- Security groups
-- Free SSL using Let's Encrypt and Certbot
-
-Later upgrade path:
-
-- Route 53 custom DNS
-- CloudFront CDN
-- AWS WAF
-- AWS Secrets Manager
-- RDS Proxy
-- SES production email
-- Advanced monitoring and tracing tools
-
-## Production Architecture
-
-```text
-Flutter App
-    |
- HTTPS
-    |
- Nginx on EC2
-    |
- Dockerized Express API
-    |
-    |-- PostgreSQL / RDS
-    |-- S3 private bucket
-    |-- OpenAI API
-    |-- CloudWatch logs
-```
-
-SSL is handled by Nginx, not directly inside Express:
-
-```text
-Client
-  -> HTTPS
-  -> Nginx with Let's Encrypt SSL
-  -> HTTP localhost:3000 Express app
-```
-
-## Backend Modules
-
-```text
-auth
-users
-categories
-expenses
-budgets
-reports
-analytics
-uploads
-ai
-notifications
-admin
-audit
-health
-```
-
-Current backend module pattern:
+Each feature module follows this flow:
 
 ```text
 routes -> controllers -> services -> repositories -> database
 ```
 
-This structure is designed so multiple team members can work on different modules independently.
+- `routes`: URL mapping and route-level middleware.
+- `controllers`: HTTP request and response handling.
+- `services`: business rules, authorization checks, and domain errors.
+- `repositories`: Prisma database access only.
+- `validators`: Zod schemas for input validation.
 
-## Core Features
+This keeps modules easy to scan, test, and split across team members.
 
-- User registration and login
-- JWT access token authentication
-- Refresh token support
-- Profile management
-- Category management
-- Expense CRUD
-- Receipt uploads
-- Budget tracking
-- Reports and exports
-- Analytics dashboard
-- AI categorization
-- AI spending insights
-- Natural language finance queries
-- Admin APIs
-- Audit logging
-- Health check endpoint
+## Setup
 
-## Security Goals
-
-- Password hashing with bcrypt
-- JWT access token and refresh token strategy
-- Refresh token rotation
-- Role-based access control
-- Zod input validation
-- Helmet/security headers
-- CORS configuration
-- Rate limiting
-- Request size limits
-- Secure file upload validation
-- Private S3 files
-- S3 pre-signed upload/download URLs
-- Environment variables for secrets
-- IAM least privilege
-- HTTPS with Let's Encrypt SSL
-- Database encryption through AWS/RDS settings where available
-- Avoid logging passwords, tokens, or sensitive financial data
-- OWASP API Top 10 awareness
-
-## Encryption And SSL Learning Goal
-
-This project should teach both application-level and infrastructure-level security.
-
-You will learn:
-
-- Difference between hashing and encryption
-- Why passwords are hashed with bcrypt instead of encrypted
-- HTTPS/SSL/TLS basics
-- Nginx SSL termination
-- Let's Encrypt certificate setup
-- Certbot auto-renewal
-- HTTP to HTTPS redirect
-- Secure cookie concepts
-- Encrypting data in transit
-- Encrypting data at rest
-- S3 private bucket access
-- RDS/PostgreSQL encryption concepts
-- Secret handling through environment variables first
-- Future migration to AWS Secrets Manager
-
-Free SSL command flow later on EC2:
+1. Install dependencies:
 
 ```bash
-sudo apt install nginx certbot python3-certbot-nginx
-sudo certbot --nginx -d api.yourdomain.com
+npm install
 ```
 
-## DevOps Goals
+2. Create environment file:
 
-- Dockerfile for backend
-- Docker Compose for local development
-- GitHub Actions CI/CD
-- Lint checks
-- Test checks
-- Prisma validation
-- Docker build
-- EC2 deployment script
-- Nginx reverse proxy config
-- Environment-specific config
-- Basic rollback strategy
-- Server log debugging
+```bash
+cp .env.example .env
+```
 
-## Testing Goals
-
-- Unit tests with Jest
-- API integration tests with Supertest
-- Auth tests
-- Validation tests
-- Authorization tests
-- File upload tests
-- AI service fallback tests
-- Database seed for tests
-- CI test pipeline
-
-## Observability Goals
-
-- Request logs
-- Error logs
-- Structured logging with Winston
-- Request IDs
-- CloudWatch basic logs
-- Health endpoint
-- Future OpenTelemetry tracing
-
-## What This Project Will Teach
-
-### Flutter
-
-- Production folder structure
-- Clean Architecture
-- Feature-based modules
-- Riverpod state management
-- Dio interceptors
-- Secure token storage
-- GoRouter protected routes
-- API error handling
-- Form validation
-- File upload from mobile
-- Dashboard UI
-- Charts
-- Offline-first expense entry
-- Dark theme
-- Localization
-- Responsive layouts
-- Release preparation
-- Dev/staging/prod flavors
-
-### Backend
-
-- REST API design
-- Express middleware flow
-- Modular architecture
-- Authentication and authorization
-- JWT access tokens
-- Refresh token rotation
-- Password hashing
-- Role-based access control
-- Zod validation
-- Central error handling
-- Rate limiting
-- Secure headers
-- Upload handling
-- S3 integration
-- Pagination, filtering, and sorting
-- Reports and analytics APIs
-- Swagger documentation
-- Jest and Supertest testing
-- Prisma migrations
-- Seed data
-
-### PostgreSQL And Prisma
-
-- Relational schema design
-- Prisma models and relations
-- Decimal storage for money
-- Indexing
-- Transactions
-- Migrations
-- Seed scripts
-- Query optimization basics
-- Soft deletes
-- Audit tables
-- Backup and restore basics
-
-### AWS
-
-- EC2 setup
-- Linux server commands
-- SSH
-- Security groups
-- Nginx reverse proxy
-- SSL with Let's Encrypt
-- Environment variables on server
-- Docker deployment
-- RDS/PostgreSQL setup
-- S3 buckets
-- IAM least privilege
-- CloudWatch logs
-- Cost-aware free-tier planning
-- Production architecture explanation
-
-### DevOps
-
-- Docker
-- Docker Compose
-- Nginx config
-- GitHub Actions
-- CI/CD pipeline
-- Deployment automation
-- Environment separation
-- Rollback basics
-- Server debugging
-
-### Security
-
-- OWASP API risks
-- Broken object-level authorization
-- Broken authentication
-- CORS
-- Rate limiting
-- Secure headers
-- JWT risks
-- Refresh token risks
-- File upload risks
-- Secret management
-- HTTPS/SSL
-- Data-in-transit encryption
-- Data-at-rest encryption
-- Least privilege IAM
-
-### AI
-
-- OpenAI API integration
-- Prompt design
-- AI categorization
-- AI spending summaries
-- Natural language queries
-- Guardrails for finance wording
-- AI failure fallback
-- AI usage and cost control
-- Privacy concerns with financial data
-
-## Interview Pitch
-
-FinFlow AI is a production-style personal finance SaaS built with Flutter, Node.js, Express, PostgreSQL, Prisma, Docker, and AWS. It supports secure authentication, expense tracking, receipt uploads, analytics, AI-powered spending insights, and cloud deployment. The backend uses modular architecture, validation, centralized errors, JWT security, Prisma migrations, health checks, and a free-tier-first AWS deployment plan with EC2, Nginx, SSL, S3, and PostgreSQL.
-
-## Repository Structure
+3. Set real values in `.env`, especially:
 
 ```text
-finflow-ai/
-|-- backend/
-|   |-- README.md
-|   |-- prisma/
-|   `-- src/
-|-- frontend/
-|   |-- lib/
-|   `-- test/
-`-- README.md
+DATABASE_URL
+JWT_SECRET
+CORS_ORIGIN
 ```
 
-## Current Status
+4. Apply database migrations:
 
-Backend foundation is in progress:
+```bash
+npx prisma migrate dev
+```
 
-- Modular Express structure
-- Auth, category, expense, and health modules
-- Prisma PostgreSQL schema
-- JWT auth middleware
-- Zod validation
-- Central error handling
-- Security headers
-- Rate limiting
-- User-scoped categories
-- Decimal amount storage
-- Backend README
-- Environment example
+5. Start development server:
 
-Next planned steps:
+```bash
+npm run dev
+```
 
-- Apply Prisma migration
-- Add backend tests
-- Add Swagger docs
-- Add Docker setup
-- Add refresh token rotation
-- Add upload module
-- Add AWS EC2 + Nginx + SSL deployment docs
+The API should be available at:
+
+```text
+http://localhost:3000
+```
+
+## Available Scripts
+
+```bash
+npm start       # run production entrypoint
+npm run dev     # run with nodemon
+npm run lint    # run ESLint
+npm run format  # format with Prettier
+```
+
+## API Health
+
+```http
+GET /api/health
+```
+
+Returns service status, service name, and timestamp. This endpoint is suitable for AWS load balancer or container health checks.
+
+## Security Baseline
+
+Current backend protections include:
+
+- Required environment validation for `JWT_SECRET` and `DATABASE_URL`.
+- JWT auth middleware for protected routes.
+- Auth rate limiting for login and registration.
+- Security headers for content type, framing, referrer policy, and permissions policy.
+- Configurable CORS through `CORS_ORIGIN`.
+- Zod validation with consistent `400` responses.
+- Central `AppError` type for predictable operational errors.
+- User-scoped categories to prevent cross-user data access.
+- Decimal storage for financial amounts instead of floating point.
+
+For AWS production, also configure:
+
+- AWS WAF for managed rules and IP/rate throttling.
+- HTTPS only through ALB or CloudFront.
+- Secrets Manager or SSM Parameter Store for secrets.
+- RDS PostgreSQL with backups, encryption, and private networking.
+- CloudWatch logs, metrics, alarms, and structured request tracing.
+- CI checks for linting, tests, Prisma validation, and dependency scanning.
+
+## Data Model Notes
+
+- `User` owns `Category` and `Expense`.
+- `Category` is unique per user by name.
+- `Expense.amount` uses `Decimal(12, 2)` for finance-safe persistence.
+- Expense category lookup is scoped to the authenticated user.
+
+## Team Workflow
+
+- Create or change one module at a time under `src/modules/<feature>`.
+- Keep shared logic in `middlewares`, `utils`, or `repositories` only when multiple modules need it.
+- Add migrations for every schema change.
+- Do not commit `.env`; use `.env.example` for required keys.
+- Run `npm run lint` and `npx prisma validate` before opening a PR.
