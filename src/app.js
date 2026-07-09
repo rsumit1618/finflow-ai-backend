@@ -9,6 +9,8 @@ import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import { corsOptions, securityHeaders } from "./middlewares/securityMiddleware.js";
 import { requestIdMiddleware } from "./middlewares/requestIdMiddleware.js";
 import { API_VERSION } from "./constants/appConstants.js";
+import RedisStore from 'rate-limit-redis';
+import redisClient from './config/redis.js';
 import {
   globalErrorHandler,
   notFoundHandler,
@@ -21,29 +23,24 @@ const app = express();
 console.log('🔥 FORCE TEST: Rate limit loading...');
 
 const limiter = rateLimit({
-  windowMs: 10 * 1000,      // 10 seconds
-  max: 2,                   // 2 requests per 10 seconds
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+  }),
+  windowMs: 10 * 1000,
+  max: 2,
   message: {
     success: false,
-    message: "TEST RATE LIMIT HIT",
+    message: "Too many requests, please try again later.",
   },
   statusCode: 429,
   standardHeaders: true,
   legacyHeaders: false,
-
-  // Make key stable behind proxies (first IP from x-forwarded-for)
   keyGenerator: (req) => {
-    const xff = req.headers["x-forwarded-for"];
-    const firstIp =
-      typeof xff === "string" ? xff.split(",")[0].trim() : undefined;
-
-    return firstIp || req.ip;
+    return req.headers["x-forwarded-for"] || req.ip;
   },
-
   skip: (req) => {
     return req.headers["x-bypass-rate-limit"] === "true";
   },
-
 });
 
 // ✅ Apply limiter to all requests
