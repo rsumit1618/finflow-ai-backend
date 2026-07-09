@@ -41,7 +41,7 @@ const limiter = rateLimit({
   },
 });
 
-// ✅ Apply limiter (SAB SE PEHLE)
+// ✅ Apply limiter to all requests
 app.use(limiter);
 
 console.log('✅ FORCE TEST: Rate limit applied');
@@ -54,11 +54,11 @@ app.use(requestIdMiddleware);
 app.use(loggerMiddleware);
 app.use(express.json({ limit: "1mb" }));
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("FinFlow AI Backend is running");
 });
 
-app.get('/force-error', (req, res) => {
+app.get('/force-error', (_req, _res) => {
   throw new Error('Manual 500 error for Sentry test');
 });
 
