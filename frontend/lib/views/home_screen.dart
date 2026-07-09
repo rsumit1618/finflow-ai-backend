@@ -20,7 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🏠 FinFlow AI',style: TextStyle(color: Colors.white),),
+        title: const Text('🏠 FinFlow AI', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.deepPurple,
         actions: [
           Padding(
@@ -71,14 +71,34 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
 
               // ============================================================
-              // QUICK TEST BUTTONS
+              // RATE LIMIT TOGGLE
+              // ============================================================
+              Card(
+                child: SwitchListTile(
+                  title: const Text('Rate Limit'),
+                  subtitle: Text(
+                    homeViewModel.rateLimitEnabled
+                        ? 'ON (2 success, 8 fail)'
+                        : 'OFF (10 success)',
+                  ),
+                  value: homeViewModel.rateLimitEnabled,
+                  onChanged: (value) {
+                    homeViewModel.toggleRateLimit(value);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // ============================================================
+              // QUICK API TESTS
               // ============================================================
               const Text(
                 '⚡ Quick API Tests',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              // Quick Test Buttons (updated)
+
+              // Row 1: Profile + 10 Calls
               Row(
                 children: [
                   Expanded(
@@ -101,6 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 8),
+
+              // Row 2: 100 Calls + 500 Error
               Row(
                 children: [
                   Expanded(
@@ -115,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _buildQuickButton(
-                      label: '💥 Test 500 Error',
+                      label: '💥 Test 500',
                       color: Colors.red,
                       onTap: homeViewModel.isLoading
                           ? null
@@ -125,42 +147,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 8),
+
+              // Row 3: 1000 Calls + 10K Load Test
               Row(
                 children: [
                   Expanded(
                     child: _buildQuickButton(
-                      label: '🚀 100 Calls',
-                      color: Colors.purple,
-                      onTap: homeViewModel.isLoading
-                          ? null
-                          : () => homeViewModel.testPerformance(100),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildQuickButton(
                       label: '💥 1000 Calls',
-                      color: Colors.red,
+                      color: Colors.deepPurple,
                       onTap: homeViewModel.isLoading
                           ? null
                           : () => homeViewModel.testPerformance(1000),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _buildQuickButton(
-                      label: '⚡ 10K Load Test',
+                      label: '⚡ 10K Load',
                       color: Colors.deepOrange,
                       onTap: homeViewModel.isLoading
                           ? null
                           : () => homeViewModel.testPerformance(10000),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Row 4: Clear Stats + Stop
+              Row(
+                children: [
                   Expanded(
                     child: _buildQuickButton(
                       label: '🔄 Clear Stats',
@@ -175,25 +191,51 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Quick Test Buttons ke neechay
-              Row(
-                children: [
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _buildQuickButton(
                       label: '⏹️ Stop',
                       color: Colors.red,
                       onTap: () {
-                        // API call cancel karo
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('⏹️ API calls stopped!')),
                         );
                       },
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Row 5: 100 Parallel + 1000 Parallel
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildQuickButton(
+                      label: '🔥 100 Parallel',
+                      color: Colors.teal,
+                      onTap: homeViewModel.isLoading
+                          ? null
+                          : () => homeViewModel.testPerformanceParallel(100, bypass: !homeViewModel.rateLimitEnabled),
+                    ),
+                  ),
                   const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildQuickButton(
+                      label: '⚡ 1000 Parallel',
+                      color: Colors.purple,
+                      onTap: homeViewModel.isLoading
+                          ? null
+                          : () => homeViewModel.testPerformanceParallel(1000, bypass: !homeViewModel.rateLimitEnabled),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Row 6: Reset App
+              Row(
+                children: [
                   Expanded(
                     child: _buildQuickButton(
                       label: '🔄 Reset App',
@@ -206,35 +248,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-                ],
-              ),
-              // Quick Test Buttons mein add karo
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildQuickButton(
-                      label: '⚡ 1000 Parallel',
-                      color: Colors.purple,
-                      onTap: homeViewModel.isLoading
-                          ? null
-                          : () => homeViewModel.testPerformanceParallel(1000),
-                    ),
-                  ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: _buildQuickButton(
-                      label: '🔥 100 Parallel',
-                      color: Colors.teal,
-                      onTap: homeViewModel.isLoading
-                          ? null
-                          : () => homeViewModel.testPerformanceParallel(100),
-                    ),
+                    child: Container(), // Empty placeholder
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-
 
               // ============================================================
               // CUSTOM COUNT TEST

@@ -9,7 +9,6 @@ class ApiService {
   bool _isRefreshing = false;
 
   ApiService() {
-
     _dio.options.baseUrl = AppConstants.baseUrl;
     _dio.options.connectTimeout = Duration(seconds: AppConstants.connectTimeout);
     _dio.options.receiveTimeout = Duration(seconds: AppConstants.receiveTimeout);
@@ -72,6 +71,10 @@ class ApiService {
     ));
   }
 
+  // ============================================================
+  // AUTH
+  // ============================================================
+
   Future<AuthResponse> register(String name, String email, String password) async {
     try {
       final response = await _dio.post(
@@ -119,6 +122,10 @@ class ApiService {
     }
   }
 
+  // ============================================================
+  // SEQUENTIAL PERFORMANCE TEST
+  // ============================================================
+
   Future<Map<String, dynamic>> testPerformance(int count) async {
     int success = 0;
     int failure = 0;
@@ -148,23 +155,9 @@ class ApiService {
     };
   }
 
-  Future<Map<String, dynamic>> test500Error() async {
-    try {
-      final response = await _dio.get('/force-error');
-      return {
-        'success': true,
-        'data': response.data,
-        'statusCode': response.statusCode,
-      };
-    } on DioException catch (e) {
-      // ✅ 500 error bhi catch hoga
-      return {
-        'success': false,
-        'message': e.response?.data['message'] ?? e.message,
-        'statusCode': e.response?.statusCode,
-      };
-    }
-  }
+  // ============================================================
+  // SINGLE API CALL
+  // ============================================================
 
   Future<Map<String, dynamic>> callApi() async {
     try {
@@ -184,7 +177,88 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> testPerformanceParallel(int count) async {
+  // ============================================================
+  // 500 ERROR TEST (SENTRY)
+  // ============================================================
+
+  Future<Map<String, dynamic>> test500Error() async {
+    try {
+      final response = await _dio.get('/force-error');
+      return {
+        'success': true,
+        'data': response.data,
+        'statusCode': response.statusCode,
+      };
+    } on DioException catch (e) {
+      return {
+        'success': false,
+        'message': e.response?.data['message'] ?? e.message,
+        'statusCode': e.response?.statusCode,
+      };
+    }
+  }
+
+  // ============================================================
+  // PARALLEL PERFORMANCE TEST (WITH BYPASS HEADER)
+  // ============================================================
+
+  Future<Map<String, dynamic>> testPerformanceParallel(int count, {bool bypass = false}) async {
+    int success = 0;
+    int failure = 0;
+    List<int> responseTimes = [];
+
+    final requests = List.generate(count, (_) async {
+      try {
+        final start = DateTime.now();
+        final response = await _dio.get(
+          AppConstants.profile,
+          options: Options(
+            headers: {
+              'x-bypass-rate-limit': bypass ? 'true' : 'false',
+            },
+          ),
+        );
+        final end = DateTime.now();
+        final duration = end.difference(start).inMilliseconds;
+        return {'response': response, 'duration': duration};
+      } catch (_) {
+        return null;
+      }
+    });
+
+    final results = await Future.wait(requests);
+
+    for (final result in results) {
+      if (result != null) {
+        final response = result['response'] as Response?;
+        if (response != null && response.statusCode == 200) {
+          success++;
+          final duration = result['duration'] as int? ?? 100;  // ✅ Explicit cast
+          responseTimes.add(duration);
+        } else {
+          failure++;
+        }
+      } else {
+        failure++;
+      }
+    }
+
+    final avgTime = responseTimes.isNotEmpty
+        ? responseTimes.reduce((a, b) => a + b) ~/ responseTimes.length
+        : 0;
+
+    return {
+      'total': count,
+      'success': success,
+      'failure': failure,
+      'avgResponseTime': avgTime,
+    };
+  }
+  // ============================================================
+  // LEGACY: OLD PARALLEL (KEPT FOR BACKWARD COMPATIBILITY)
+  // ============================================================
+
+  Future<Map<String, dynamic>> testPerformanceParallelLegacy(int count) async {
     int success = 0;
     int failure = 0;
     List<int> responseTimes = [];
@@ -219,6 +293,10 @@ class ApiService {
       'avgResponseTime': avgTime,
     };
   }
+
+  // ============================================================
+  // LOGOUT
+  // ============================================================
 
   Future<void> logout() async {
     await SecureStorage.clearTokens();
