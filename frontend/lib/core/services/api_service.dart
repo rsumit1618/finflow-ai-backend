@@ -12,6 +12,7 @@ class ApiService {
     _dio.options.baseUrl = AppConstants.baseUrl;
     _dio.options.connectTimeout = Duration(seconds: AppConstants.connectTimeout);
     _dio.options.receiveTimeout = Duration(seconds: AppConstants.receiveTimeout);
+    _dio.options.maxRedirects = 5;
 
     if (!kIsWeb) {
       _dio.options.sendTimeout = Duration(seconds: AppConstants.receiveTimeout);
@@ -209,6 +210,7 @@ class ApiService {
 
     final requests = List.generate(count, (_) async {
       try {
+        print('🔍 Bypass value: ${bypass ? "true" : "false"}');
         final start = DateTime.now();
         final response = await _dio.get(
           AppConstants.profile,

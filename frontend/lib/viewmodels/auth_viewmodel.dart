@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/services/api_service.dart';
 import '../core/storage/secure_storage.dart';
-import '../models/auth_model.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final ApiService _api = ApiService();
@@ -21,6 +20,10 @@ class AuthViewModel extends ChangeNotifier {
   Future<void> checkLoginStatus() async {
     final token = await SecureStorage.getAccessToken();
     _isLoggedIn = token != null && token.isNotEmpty;
+    if (_isLoggedIn) {
+      // Optionally fetch profile
+      await getProfile();
+    }
     notifyListeners();
   }
 
@@ -31,7 +34,6 @@ class AuthViewModel extends ChangeNotifier {
     final response = await _api.register(name, email, password);
 
     if (response.success) {
-      // Auto login after registration
       final loginSuccess = await login(email, password);
       _setLoading(false);
       return loginSuccess;
@@ -58,6 +60,17 @@ class AuthViewModel extends ChangeNotifier {
       _errorMessage = response.message ?? 'Login failed';
       _setLoading(false);
       return false;
+    }
+  }
+
+  Future<void> getProfile() async {
+    final result = await _api.getProfile();
+    if (result['success']) {
+      final user = result['data']['data']['user'];
+      _userName = user['name'] ?? '';
+      _userEmail = user['email'] ?? '';
+      _isLoggedIn = true;
+      notifyListeners();
     }
   }
 

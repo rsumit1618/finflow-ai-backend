@@ -21,9 +21,6 @@ class HomeViewModel extends ChangeNotifier {
   String get debugInfo => _debugInfo;
   bool get rateLimitEnabled => _rateLimitEnabled;
 
-  // ============================================================
-  // CLEAR STATS
-  // ============================================================
   void clearStats() {
     _successCount = 0;
     _failureCount = 0;
@@ -33,17 +30,11 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ============================================================
-  // TOGGLE RATE LIMIT
-  // ============================================================
   void toggleRateLimit(bool value) {
     _rateLimitEnabled = value;
     notifyListeners();
   }
 
-  // ============================================================
-  // SINGLE API CALL
-  // ============================================================
   Future<void> callSingleApi() async {
     _reset();
     _setLoading(true);
@@ -62,15 +53,13 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
-  // ============================================================
-  // SEQUENTIAL PERFORMANCE TEST
-  // ============================================================
+  // ✅ FIXED: Uses bypass parameter
   Future<void> testPerformance(int count) async {
     _reset();
     _setLoading(true);
 
     try {
-      final result = await _api.testPerformance(count).timeout(
+      final result = await _api.testPerformanceParallel(count, bypass: !_rateLimitEnabled).timeout(
         const Duration(seconds: 300),
         onTimeout: () {
           return {
@@ -100,9 +89,6 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
-  // ============================================================
-  // PARALLEL PERFORMANCE TEST (WITH BYPASS)
-  // ============================================================
   Future<void> testPerformanceParallel(int count, {bool bypass = false}) async {
     _reset();
     _setLoading(true);
@@ -138,9 +124,6 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
-  // ============================================================
-  // 500 ERROR TEST (SENTRY)
-  // ============================================================
   Future<void> test500Error() async {
     _reset();
     _setLoading(true);
@@ -161,9 +144,6 @@ class HomeViewModel extends ChangeNotifier {
     _setLoading(false);
   }
 
-  // ============================================================
-  // HELPERS
-  // ============================================================
   void _reset() {
     _successCount = 0;
     _failureCount = 0;
