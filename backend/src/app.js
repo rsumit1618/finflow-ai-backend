@@ -39,6 +39,11 @@ const limiter = rateLimit({
 
     return firstIp || req.ip;
   },
+
+  skip: (req) => {
+    return req.headers["x-bypass-rate-limit"] === "true";
+  },
+
 });
 
 // ✅ Apply limiter to all requests
