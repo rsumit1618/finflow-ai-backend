@@ -27,7 +27,7 @@ const limiter = rateLimit({
     sendCommand: (...args) => redisClient.call(...args),
   }),
   windowMs: 10 * 1000,
-  max: 2,
+  max: 100, // Badha kar 100 kiya taaki assets load ho sakein
   message: {
     success: false,
     message: "Too many requests, please try again later.",
@@ -39,7 +39,8 @@ const limiter = rateLimit({
     return req.headers["x-forwarded-for"] || req.ip;
   },
   skip: (req) => {
-    return req.headers["x-bypass-rate-limit"] === "true";
+    // Swagger routes ko rate limit se bahar rakhein
+    return req.originalUrl.startsWith('/api-docs') || req.headers["x-bypass-rate-limit"] === "true";
   },
 });
 
