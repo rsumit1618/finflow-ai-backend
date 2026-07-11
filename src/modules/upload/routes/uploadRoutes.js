@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { handleFileUpload, handleFileDelete, handlePdfUpload, getUserDocuments } from '../controllers/uploadController.js';
+import { handleFileUpload, handleFileDelete, handlePdfUpload, getUserDocuments, deleteUserDocument } from '../controllers/uploadController.js';
 import { authMiddleware } from '../../../middlewares/authMiddleware.js';
 import { validate } from '../../../middlewares/validate.js';
 import { deleteFileSchema } from '../validators/uploadValidator.js';
@@ -41,6 +41,7 @@ const pdfUpload = multer({
 router.post('/upload', authMiddleware, upload.single('file'), handleFileUpload);
 router.post('/pdf', authMiddleware, pdfUpload.single('file'), handlePdfUpload);
 router.get('/documents', authMiddleware, getUserDocuments);
+router.delete('/documents/:id', authMiddleware, deleteUserDocument);
 router.delete('/file', authMiddleware, validate(deleteFileSchema), handleFileDelete);
 
 export default router;

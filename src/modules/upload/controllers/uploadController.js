@@ -1,6 +1,7 @@
-import { uploadFile, deleteFile } from '../../../services/s3Service.js';
+import { uploadFile, deleteFile, getDownloadUrl } from '../../../services/s3Service.js';
 import { successResponse } from '../../../utils/apiResponse.js';
-import { createDocument, findUserDocuments } from '../../../repositories/documentRepository.js';
+import { createDocument, findUserDocuments, findDocumentById, deleteDocumentById } from '../../../repositories/documentRepository.js';
+import { AppError } from '../../../utils/AppError.js';
 
 export const handleFileUpload = async (req, res, next) => {
   try {
@@ -8,10 +9,13 @@ export const handleFileUpload = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const fileName = `users/${req.user.userId}/${Date.now()}-${req.file.originalname}`;
-    const url = await uploadFile(req.file.buffer, fileName, req.file.mimetype);
+    const s3Key = `users/${req.user.userId}/${Date.now()}-${req.file.originalname}`;
+    await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
-    return successResponse(res, { url, fileName }, 'File uploaded successfully', 201);
+    // For general uploads, we can still provide a signed URL immediately
+    const signedUrl = await getDownloadUrl(s3Key);
+
+    return successResponse(res, { url: signedUrl, fileName: s3Key }, 'File uploaded successfully', 201);
   } catch (error) {
     next(error);
   }
@@ -24,17 +28,20 @@ export const handlePdfUpload = async (req, res, next) => {
     }
 
     const s3Key = `documents/${req.user.userId}/${Date.now()}-${req.file.originalname}`;
-    const url = await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
+    await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
-    // Save to Database
+    // Save to Database (storing the Key as URL for consistency, but we generate signed URLs on fetch)
     const document = await createDocument({
       name: req.file.originalname,
       s3Key: s3Key,
-      url: url,
+      url: s3Key, // Store key in URL field
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
       userId: req.user.userId,
     });
+
+    // Add a temporary signed URL for immediate view
+    document.url = await getDownloadUrl(s3Key);
 
     return successResponse(res, document, 'PDF uploaded and saved successfully', 201);
   } catch (error) {
@@ -45,7 +52,16 @@ export const handlePdfUpload = async (req, res, next) => {
 export const getUserDocuments = async (req, res, next) => {
   try {
     const documents = await findUserDocuments(req.user.userId);
-    return successResponse(res, documents, 'Documents fetched successfully');
+
+    // Generate temporary signed URLs for each document
+    const documentsWithUrls = await Promise.all(documents.map(async (doc) => {
+      return {
+        ...doc,
+        url: await getDownloadUrl(doc.s3Key)
+      };
+    }));
+
+    return successResponse(res, documentsWithUrls, 'Documents fetched successfully');
   } catch (error) {
     next(error);
   }
@@ -54,8 +70,39 @@ export const getUserDocuments = async (req, res, next) => {
 export const handleFileDelete = async (req, res, next) => {
   try {
     const { fileName } = req.body;
+
+    // Security check: Ensure the user is only deleting their own files
+    // The path structure is users/{userId}/... or documents/{userId}/...
+    const pathParts = fileName.split('/');
+    if (pathParts[1] !== req.user.userId.toString()) {
+      throw new AppError('Unauthorized: You can only delete your own files', 403);
+    }
+
     await deleteFile(fileName);
     return successResponse(res, null, 'File deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUserDocument = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const documentId = parseInt(id);
+
+    // 1. Find document and verify ownership
+    const document = await findDocumentById(documentId, req.user.userId);
+    if (!document) {
+      throw new AppError('Document not found or access denied', 404);
+    }
+
+    // 2. Delete from S3
+    await deleteFile(document.s3Key);
+
+    // 3. Delete from Database
+    await deleteDocumentById(documentId, req.user.userId);
+
+    return successResponse(res, null, 'Document deleted successfully');
   } catch (error) {
     next(error);
   }

@@ -1,4 +1,5 @@
-import { PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import s3Client from '../config/s3.js';
 import { env } from '../config/env.js';
 
@@ -13,7 +14,18 @@ export const uploadFile = async (fileBuffer, fileName, contentType) => {
   });
 
   await s3Client.send(command);
-  return `https://${BUCKET_NAME}.s3.${env.AWS_REGION}.amazonaws.com/${fileName}`;
+  // Return the key instead of a potentially public URL
+  return fileName;
+};
+
+export const getDownloadUrl = async (fileName) => {
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: fileName,
+  });
+
+  // URL expires in 1 hour (3600 seconds)
+  return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
 };
 
 export const deleteFile = async (fileName) => {
