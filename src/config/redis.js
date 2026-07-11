@@ -1,8 +1,9 @@
 import Redis from 'ioredis';
 
 const redisClient = new Redis({
-  host: 'localhost',
-  port: 6379,
+  host: process.env.REDIS_HOST || 'localhost',
+  port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+  password: process.env.REDIS_PASSWORD || null,
   retryStrategy: (times) => {
     const delay = Math.min(times * 50, 2000);
     return delay;
@@ -11,7 +12,7 @@ const redisClient = new Redis({
 });
 
 redisClient.on('connect', () => {
-  console.log('✅ Redis connected (local)');
+  console.log('✅ Redis connected');
 });
 
 redisClient.on('error', (err) => {
