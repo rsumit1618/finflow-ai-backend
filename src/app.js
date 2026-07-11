@@ -17,7 +17,6 @@ import {
 } from "./middlewares/errorMiddleware.js";
 import Sentry from './config/sentry.js';
 
-
 const app = express();
 
 console.log('🔥 FORCE TEST: Rate limit loading...');
