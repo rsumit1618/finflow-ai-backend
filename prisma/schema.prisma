@@ -15,11 +15,29 @@ model User {
   categories   Category[]
   expenses     Expense[]
   refreshTokens RefreshToken[]
+  documents    Document[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@map("users")
+}
+
+model Document {
+  id        Int      @id @default(autoincrement())
+  name      String
+  s3Key     String
+  url       String
+  fileSize  Int
+  mimeType  String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("documents")
 }
 
 model RefreshToken {
