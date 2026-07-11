@@ -17,6 +17,8 @@ import {
 } from "./middlewares/errorMiddleware.js";
 import Sentry from './config/sentry.js';
 import uploadRoutes from './modules/upload/routes/uploadRoutes.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
 
 const app = express();
 
@@ -51,6 +53,9 @@ app.use(securityHeaders);
 app.use(requestIdMiddleware);
 app.use(loggerMiddleware);
 app.use(express.json({ limit: "1mb" }));
+
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get("/", (_req, res) => {
   res.send("FinFlow AI Backend is running");
