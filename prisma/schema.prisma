@@ -26,6 +26,7 @@ model User {
 model Document {
   id        Int      @id @default(autoincrement())
   name      String
+  category  String   @default("GENERAL")
   s3Key     String
   url       String
   fileSize  Int
@@ -37,6 +38,7 @@ model Document {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([category])
   @@map("documents")
 }
 

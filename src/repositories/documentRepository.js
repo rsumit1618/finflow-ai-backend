@@ -6,11 +6,23 @@ export const createDocument = async (data) => {
   });
 };
 
-export const findUserDocuments = async (userId) => {
-  return await prisma.document.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' },
-  });
+export const findUserDocuments = async (userId, { skip = 0, take = 10, category } = {}) => {
+  const where = { userId };
+  if (category) {
+    where.category = category;
+  }
+
+  const [documents, total] = await Promise.all([
+    prisma.document.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.document.count({ where }),
+  ]);
+
+  return { documents, total };
 };
 
 export const findDocumentById = async (id, userId) => {

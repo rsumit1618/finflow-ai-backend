@@ -27,14 +27,19 @@ export const handlePdfUpload = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No PDF file uploaded' });
     }
 
-    const s3Key = `documents/${req.user.userId}/${Date.now()}-${req.file.originalname}`;
+    const category = req.body.category || 'GENERAL';
+    // Organize S3 path by category
+    const safeCategory = category.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const s3Key = `documents/${req.user.userId}/${safeCategory}/${Date.now()}-${req.file.originalname}`;
+
     await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
-    // Save to Database (storing the Key as URL for consistency, but we generate signed URLs on fetch)
+    // Save to Database
     const document = await createDocument({
       name: req.file.originalname,
+      category: category.toUpperCase(),
       s3Key: s3Key,
-      url: s3Key, // Store key in URL field
+      url: s3Key,
       fileSize: req.file.size,
       mimeType: req.file.mimetype,
       userId: req.user.userId,
@@ -51,7 +56,12 @@ export const handlePdfUpload = async (req, res, next) => {
 
 export const getUserDocuments = async (req, res, next) => {
   try {
-    const documents = await findUserDocuments(req.user.userId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    const category = req.query.category?.toUpperCase();
+
+    const { documents, total } = await findUserDocuments(req.user.userId, { skip, take: limit, category });
 
     // Generate temporary signed URLs for each document
     const documentsWithUrls = await Promise.all(documents.map(async (doc) => {
@@ -61,7 +71,15 @@ export const getUserDocuments = async (req, res, next) => {
       };
     }));
 
-    return successResponse(res, documentsWithUrls, 'Documents fetched successfully');
+    return successResponse(res, {
+      documents: documentsWithUrls,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    }, 'Documents fetched successfully');
   } catch (error) {
     next(error);
   }
