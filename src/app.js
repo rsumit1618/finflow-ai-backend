@@ -16,10 +16,9 @@ import {
   notFoundHandler,
 } from "./middlewares/errorMiddleware.js";
 import Sentry from './config/sentry.js';
+import uploadRoutes from './modules/upload/routes/uploadRoutes.js';
 
 const app = express();
-
-console.log('🔥 FORCE TEST: Rate limit loading...');
 
 const limiter = rateLimit({
   store: new RedisStore({
@@ -45,8 +44,6 @@ const limiter = rateLimit({
 // ✅ Apply limiter to all requests
 app.use(limiter);
 
-console.log('✅ FORCE TEST: Rate limit applied');
-
 app.set("trust proxy", 1);
 
 app.use(cors(corsOptions));
@@ -67,11 +64,13 @@ app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use('/api/upload', uploadRoutes);
 
 app.use(`/api/${API_VERSION}/health`, healthRoutes);
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
 app.use(`/api/${API_VERSION}/categories`, categoryRoutes);
 app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
+app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
 
 // Register Sentry's Express error handler
 Sentry.setupExpressErrorHandler(app);
