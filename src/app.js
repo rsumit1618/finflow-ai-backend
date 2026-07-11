@@ -23,9 +23,12 @@ import swaggerSpec from './config/swagger.js';
 const app = express();
 
 const limiter = rateLimit({
-  store: new RedisStore({
-    sendCommand: (...args) => redisClient.call(...args),
-  }),
+  // ✅ Fallback to MemoryStore if Redis is not connected
+  store: redisClient.status === 'ready'
+    ? new RedisStore({
+        sendCommand: (...args) => redisClient.call(...args),
+      })
+    : undefined, // undefined means use default MemoryStore
   windowMs: 10 * 1000,
   max: 100, // Badha kar 100 kiya taaki assets load ho sakein
   message: {

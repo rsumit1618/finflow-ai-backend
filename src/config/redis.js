@@ -9,6 +9,14 @@ const redisClient = new Redis({
     return delay;
   },
   maxRetriesPerRequest: 3,
+  enableReadyCheck: true,
+  reconnectOnError: (err) => {
+    const targetError = 'READONLY';
+    if (err.message.slice(0, targetError.length) === targetError) {
+      return true;
+    }
+    return false;
+  },
 });
 
 redisClient.on('connect', () => {
@@ -16,7 +24,11 @@ redisClient.on('connect', () => {
 });
 
 redisClient.on('error', (err) => {
-  console.error('❌ Redis error:', err);
+  if (err.code === 'ECONNREFUSED') {
+    console.warn('⚠️ Redis not found. Rate limiting will use MemoryStore.');
+  } else {
+    console.error('❌ Redis error:', err);
+  }
 });
 
 export default redisClient;
