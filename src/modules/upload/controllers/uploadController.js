@@ -9,7 +9,10 @@ export const handleFileUpload = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
-    const s3Key = `users/${req.user.userId}/${Date.now()}-${req.file.originalname}`;
+    const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
+    const docType = fileExtension === 'pdf' ? 'pdf' : (['jpg', 'jpeg', 'png'].includes(fileExtension) ? 'image' : 'other');
+
+    const s3Key = `documents/${req.user.userId}/${docType}/${Date.now()}-${req.file.originalname}`;
     await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
     // For general uploads, we can still provide a signed URL immediately
@@ -28,9 +31,8 @@ export const handlePdfUpload = async (req, res, next) => {
     }
 
     const category = req.body.category || 'GENERAL';
-    // Organize S3 path by category
-    const safeCategory = category.toLowerCase().replace(/[^a-z0-9]/g, '-');
-    const s3Key = `documents/${req.user.userId}/${safeCategory}/${Date.now()}-${req.file.originalname}`;
+    // Organize S3 path: documents/userId/pdf/timestamp-filename.pdf
+    const s3Key = `documents/${req.user.userId}/pdf/${Date.now()}-${req.file.originalname}`;
 
     await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
