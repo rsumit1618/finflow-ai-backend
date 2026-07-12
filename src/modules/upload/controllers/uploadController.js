@@ -1,4 +1,4 @@
-import { uploadFile, deleteFile, getDownloadUrl } from '../../../services/s3Service.js';
+import { uploadFile, deleteFile, getPresignedUrl } from '../../../services/s3Service.js';
 import { successResponse } from '../../../utils/apiResponse.js';
 import { createDocument, findUserDocuments, findDocumentById, deleteDocumentById } from '../../../repositories/documentRepository.js';
 import { AppError } from '../../../utils/AppError.js';
@@ -16,7 +16,7 @@ export const handleFileUpload = async (req, res, next) => {
     await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
 
     // For general uploads, we can still provide a signed URL immediately
-    const signedUrl = await getDownloadUrl(s3Key);
+    const signedUrl = await getPresignedUrl(s3Key);
 
     return successResponse(res, { url: signedUrl, fileName: s3Key }, 'File uploaded successfully', 201);
   } catch (error) {
@@ -48,7 +48,7 @@ export const handlePdfUpload = async (req, res, next) => {
     });
 
     // Add a temporary signed URL for immediate view
-    document.url = await getDownloadUrl(s3Key);
+    document.url = await getPresignedUrl(s3Key);
 
     return successResponse(res, document, 'PDF uploaded and saved successfully', 201);
   } catch (error) {
@@ -69,7 +69,7 @@ export const getUserDocuments = async (req, res, next) => {
     const documentsWithUrls = await Promise.all(documents.map(async (doc) => {
       return {
         ...doc,
-        url: await getDownloadUrl(doc.s3Key)
+        url: await getPresignedUrl(doc.s3Key)
       };
     }));
 

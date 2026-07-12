@@ -18,7 +18,7 @@ export const uploadFile = async (fileBuffer, fileName, contentType) => {
   return fileName;
 };
 
-export const getDownloadUrl = async (fileName) => {
+export const getPresignedUrl = async (fileName) => {
   const command = new GetObjectCommand({
     Bucket: BUCKET_NAME,
     Key: fileName,
