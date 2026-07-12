@@ -42,7 +42,7 @@ const pdfUpload = multer({
  * @swagger
  * /upload/upload:
  *   post:
- *     summary: Upload a general file (Image/PDF)
+ *     summary: Upload a general file (S3 Path documents/userId/docType/timestamp-filename)
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -65,7 +65,7 @@ router.post('/upload', authMiddleware, upload.single('file'), handleFileUpload);
  * @swagger
  * /upload/pdf:
  *   post:
- *     summary: Upload a PDF document with category
+ *     summary: Upload a PDF document (S3 Path documents/userId/pdf/timestamp-filename)
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
