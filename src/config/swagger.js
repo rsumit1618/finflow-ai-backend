@@ -12,7 +12,7 @@ const options = {
     servers: [
       {
         url: process.env.NODE_ENV === 'production'
-          ? `https://your-api-domain.com/api/${API_VERSION}`
+          ? `http://16.171.113.12:3000/api/${API_VERSION}`
           : `http://localhost:3000/api/${API_VERSION}`,
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
