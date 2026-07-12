@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinFlow AI — Backend Architecture & Production Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f0f4f8;
+            color: #1e293b;
+            padding: 2rem 1rem;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, #1f4e79, #2a6b9c);
+            color: white;
+            padding: 2.5rem 2rem;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(31, 78, 121, 0.25);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .header .meta {
+            font-size: 0.9rem;
+            opacity: 0.75;
+            margin-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            padding-top: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.8rem 2rem;
+            margin-bottom: 1.8rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9edf4;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: 0 6px 24px rgba(31, 78, 121, 0.08);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: #1f4e79;
+        }
+
+        .badge {
+            background: #1f4e79;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.9rem;
+            border-radius: 30px;
+            letter-spacing: 0.02em;
+        }
+
+        .badge-green { background: #0b7e3d; }
+        .badge-orange { background: #b36b00; }
+        .badge-purple { background: #6b21a5; }
+        .badge-red { background: #b91c1c; }
+
+        .sub-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 1.2rem 0 0.4rem;
+            color: #0f172a;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        li {
+            margin-bottom: 0.35rem;
+        }
+
+        code {
+            background: #eef2f6;
+            padding: 0.15rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: #1f4e79;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 1.2rem 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0.8rem 0 1.2rem;
+            border: 1px solid #1e293b;
+        }
+
+        pre .cmd { color: #a5f3fc; }
+        pre .comment { color: #94a3b8; font-style: italic; }
+        pre .highlight { color: #fbbf24; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .header h1 { font-size: 2rem; }
+            .card { padding: 1.2rem; }
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 0.1rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #334155;
+            margin-right: 0.3rem;
+        }
+
+        .tag-done { background: #dcfce7; color: #166534; }
+        .tag-pending { background: #ffedd5; color: #9a3412; }
+        .tag-progress { background: #dbeafe; color: #1e40af; }
+
+        .qa-box {
+            background: #f8fafc;
+            border-left: 4px solid #1f4e79;
+            padding: 1rem 1.5rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .qa-box strong {
+            color: #1f4e79;
+        }
+
+        .footnote {
+            font-size: 0.85rem;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1.5rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        .status-done::before { content: "✅ "; }
+        .status-pending::before { content: "⏳ "; }
+        .status-progress::before { content: "🔄 "; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <h1>⚙️ FinFlow AI — Production Architecture Guide</h1>
+        <p>Complete documentation for scalable Node.js backend with PostgreSQL, Redis, S3, Sentry, Swagger &amp; CI/CD</p>
+        <div class="meta">
+            📅 July 2026 &nbsp;·&nbsp; Architecture: Modular Layered &nbsp;·&nbsp; 🚀 Production Ready
+        </div>
+    </div>
+
+    <!-- ===== ARCHITECTURE SECTION ===== -->
+    <div class="card">
+        <div class="card-title">🏗️ Modular Architecture & API Flow <span class="badge badge-purple">Standard</span></div>
+        <p style="margin-bottom:1rem;">The backend is built using a <strong>Modular Layered Architecture</strong> to ensure independent scaling of features like Auth, Expenses, and Document AI.</p>
+
+        <div class="sub-title">📌 Request Execution Journey</div>
+        <pre><span class="comment">// 1. Client sends request to Route</span>
+<span class="cmd">Route</span> (URL definition & Swagger JSDoc)
+     ↓
+<span class="cmd">Middleware</span> (Auth Check, Rate Limiting, Zod Validation)
+     ↓
+<span class="cmd">Controller</span> (Handle HTTP req/res, calling services)
+     ↓
+<span class="cmd">Service</span> (Business logic, domain rules, calling repositories)
+     ↓
+<span class="cmd">Repository</span> (Prisma database access ONLY)
+     ↓
+<span class="cmd">PostgreSQL</span> (Data persistence)</pre>
+    </div>
+
+    <!-- ===== PHASE 5: ADVANCED BACKEND ===== -->
+    <div class="card">
+        <div class="card-title">📁 Phase 5 — Document AI & Storage <span class="badge">New</span></div>
+        <div class="grid-2">
+            <div>
+                <div class="sub-title">✅ S3 Hierarchy (AI-Ready)</div>
+                <p>Files are organized into logical folders for future Vector search/RAG processing.</p>
+                <ul>
+                    <li><code>documents/{userId}/pdf/</code> — Financial docs</li>
+                    <li><code>documents/{userId}/image/</code> — Receipts/Photos</li>
+                    <li><code>documents/{userId}/other/</code> — General files</li>
+                </ul>
+            </div>
+            <div>
+                <div class="sub-title">✅ Secure Document Access</div>
+                <ul>
+                    <li><strong>Private Bucket:</strong> No public access allowed.</li>
+                    <li><strong>Presigned URLs:</strong> Temporary 1-hour access links.</li>
+                    <li><strong>User Isolation:</strong> Strict DB check for document ownership.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="sub-title">📌 Pagination & Filtering Logic</div>
+        <pre><span class="comment">// GET /api/v1/upload/documents?page=1&limit=10&category=EXPENSE</span>
+- Default Limit: 10 docs per page
+- Filtering: Can fetch by CATEGORY (EXPENSE, OFFICE, etc.)
+- Metadata: Returns Total Count, Total Pages, and Current Page</pre>
+    </div>
+
+    <!-- ===== INFRASTRUCTURE CONFIGURATION ===== -->
+    <div class="card">
+        <div class="card-title">🔑 Configuration & Environment <span class="badge badge-orange">Security</span></div>
+        <div class="sub-title">📄 .env Breakdown (Dummy Example)</div>
+        <div class="grid-2">
+            <div>
+                <pre><span class="comment"># Database (Prisma)</span>
+DATABASE_URL="postgresql://user:pass@localhost:5432/finflow"
+
+<span class="comment"># Auth (JWT)</span>
+JWT_SECRET="long_random_secret_for_access"
+JWT_REFRESH_SECRET="long_random_secret_for_refresh"
+
+<span class="comment"># Cloud Storage (AWS S3)</span>
+AWS_ACCESS_KEY_ID="AKIA_DUMMY_123"
+AWS_SECRET_ACCESS_KEY="abc/123/dummy"
+S3_BUCKET_NAME="finflow-ai-docs"</pre>
+            </div>
+            <div>
+                <pre><span class="comment"># Caching (Redis)</span>
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+
+<span class="comment"># Error Tracking (Sentry)</span>
+SENTRY_DSN="https://key@sentry.io/123"
+
+<span class="comment"># CORS Configuration</span>
+CORS_ORIGIN="http://localhost:3000"</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== SWAGGER & MONITORING ===== -->
+    <div class="card">
+        <div class="card-title">📊 Swagger & Monitoring <span class="badge badge-green">Live Docs</span></div>
+        <div class="grid-2">
+            <div>
+                <div class="sub-title">📚 Interactive Documentation</div>
+                <p>Test APIs directly from the browser with JWT support.</p>
+                <ul>
+                    <li><strong>Local:</strong> <a href="http://localhost:3000/api-docs">localhost:3000/api-docs</a></li>
+                    <li><strong>AWS:</strong> <a href="http://16.171.113.12:3000/api-docs">16.171.113.12:3000/api-docs</a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="sub-title">🛡️ Monitoring Rules</div>
+                <ul>
+                    <li><strong>Sentry:</strong> Captures only 500+ (Server) errors.</li>
+                    <li><strong>Redis:</strong> Auto-fallback to MemoryStore if server is down.</li>
+                    <li><strong>PM2:</strong> Max instances (Cluster mode) enabled.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== QUESTIONS & CLARIFICATIONS ===== -->
+    <div class="card">
+        <div class="card-title">❓ Technical Q&A <span class="badge">FAQ</span></div>
+
+        <div class="qa-box">
+            <strong>Q: How do I add a new feature (Module)?</strong>
+            <p><strong>A:</strong> 1. Update <code>schema.prisma</code> & Migrate. 2. Create Repository. 3. Build Module folder (routes/controllers/services). 4. Register in <code>app.js</code>.</p>
+        </div>
+
+        <div class="qa-box">
+            <strong>Q: Why use Repositories separately from Services?</strong>
+            <p><strong>A:</strong> Separation of Concerns. Services handle business logic (deciding WHAT to do), while Repositories handle database implementation (HOW to save/fetch).</p>
+        </div>
+
+        <div class="qa-box">
+            <strong>Q: Why do S3 URLs expire in 1 hour?</strong>
+            <p><strong>A:</strong> For security. If a URL is leaked, it becomes useless after 1 hour. This protects sensitive financial documents from unauthorized long-term access.</p>
+        </div>
+    </div>
+
+    <!-- ===== COMMAND REFERENCE ===== -->
+    <div class="card">
+        <div class="card-title">⌨️ Essential Deployment Commands</div>
+        <div class="grid-3">
+            <div>
+                <div class="sub-title">Production Sync</div>
+                <pre>git pull
+npm install
+npx prisma generate
+npx prisma migrate deploy
+pm2 restart all</pre>
+            </div>
+            <div>
+                <div class="sub-title">Debug & Logs</div>
+                <pre>pm2 logs
+pm2 list
+pm2 status
+sudo nginx -t</pre>
+            </div>
+            <div>
+                <div class="sub-title">Redis Check</div>
+                <pre>redis-cli ping
+redis-cli monitor</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footnote">
+        <p>📌 All architecture, configs, and patterns are verified for <strong>FinFlow AI</strong> backend.<br>
+        ✨ Built with ❤️ by <strong>Sumit</strong> · July 2026</p>
+    </div>
+
+</div>
+</body>
+</html>
