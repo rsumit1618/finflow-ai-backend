@@ -23,12 +23,11 @@ import swaggerSpec from './config/swagger.js';
 const app = express();
 
 const limiter = rateLimit({
-  // ✅ Fallback to MemoryStore if Redis is not connected
-  store: redisClient.status === 'ready'
-    ? new RedisStore({
-        sendCommand: (...args) => redisClient.call(...args),
-      })
-    : undefined, // undefined means use default MemoryStore
+  // ✅ Always configure RedisStore.
+  // This avoids the startup timing problem where redisClient.status isn't "ready" yet.
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.call(...args),
+  }),
   windowMs: 10 * 1000,
   max: 100, // Increased to 100 to allow assets to load
   message: {
@@ -39,7 +38,13 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    return req.headers["x-forwarded-for"] || req.ip;
+    // Prefer client IP from X-Forwarded-For when behind a proxy.
+    // XFF can contain a comma-separated list; the left-most is the original client.
+    const xff = req.headers["x-forwarded-for"];
+    if (typeof xff === "string" && xff.length > 0) {
+      return xff.split(",")[0].trim();
+    }
+    return req.ip;
   },
   skip: (req) => {
     // Exclude Swagger routes from rate limiting
