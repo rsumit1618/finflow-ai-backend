@@ -2,7 +2,7 @@ import app from "./src/app.js";
 import { env } from "./src/config/env.js";
 import { initSentry } from './src/config/sentry.js';
 
-// ✅ Sentry initialize
+// ✅ Initialize Sentry
 initSentry();
 
 app.listen(env.port, "0.0.0.0", () => {

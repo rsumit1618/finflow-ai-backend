@@ -30,7 +30,7 @@ const limiter = rateLimit({
       })
     : undefined, // undefined means use default MemoryStore
   windowMs: 10 * 1000,
-  max: 100, // Badha kar 100 kiya taaki assets load ho sakein
+  max: 100, // Increased to 100 to allow assets to load
   message: {
     success: false,
     message: "Too many requests, please try again later.",
@@ -42,7 +42,7 @@ const limiter = rateLimit({
     return req.headers["x-forwarded-for"] || req.ip;
   },
   skip: (req) => {
-    // Swagger routes ko rate limit se bahar rakhein
+    // Exclude Swagger routes from rate limiting
     return req.originalUrl.startsWith('/api-docs') || req.headers["x-bypass-rate-limit"] === "true";
   },
 });
