@@ -7,46 +7,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ─────────── AUTH / USER ───────────
+
 model User {
   id           Int      @id @default(autoincrement())
-  name         String
+  userId       String   @unique @db.VarChar(16)
   email        String   @unique
   passwordHash String
-  categories   Category[]
-  expenses     Expense[]
-  refreshTokens RefreshToken[]
-  documents    Document[]
-
+  refreshToken String?  @db.VarChar(500)
+  lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  role         String   @default("user") @db.VarChar(20)
+  isActive     Boolean  @default(true)
+  isVerified   Boolean  @default(false)
+  lastTokenGeneratedAt DateTime?
 
-  @@map("users")
-}
+  profile     Profile?
+  refreshTokens RefreshToken[]
 
-model Document {
-  id        Int      @id @default(autoincrement())
-  name      String
-  category  String   @default("GENERAL")
-  s3Key     String
-  url       String
-  fileSize  Int
-  mimeType  String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  @@index([email])
   @@index([userId])
-  @@index([category])
-  @@map("documents")
+  @@index([role])
+  @@map("users")
 }
 
 model RefreshToken {
   id        Int      @id @default(autoincrement())
   tokenHash String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.VarChar(16)
+  user      User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
   revokedAt DateTime?
   expiresAt DateTime
@@ -54,40 +44,62 @@ model RefreshToken {
 
   @@index([userId])
   @@index([tokenHash])
+  @@map("refresh_tokens")
 }
 
-model Category {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expenses    Expense[]
+// ─────────── PROFILE ───────────
 
+model Profile {
+  userId              String   @id @db.VarChar(16)
+  user                User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([userId, name])
-  @@index([userId])
-  @@map("categories")
-}
-
-model Expense {
-  id          Int      @id @default(autoincrement())
-  amount      Decimal  @db.Decimal(12, 2)
-  description String?
-  date        DateTime @default(now())
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  categoryId Int
-  category   Category @relation(fields: [categoryId], references: [id])
+  firstName           String?  @db.VarChar(50)
+  lastName            String?  @db.VarChar(50)
+  age                 Int?
+  college             String?  @db.VarChar(200)
+  qualificationYear   Int?
+  address             String?  @db.VarChar(500)
+  highestQualification String? @db.VarChar(100)
+  profileImage        String?  @db.VarChar(500)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId, date])
-  @@index([categoryId])
+  @@map("profiles")
 }
+
+// ─────────── QUALIFICATION ───────────
+
+model Qualification {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  isOther   Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@map("qualifications")
+}
+
+// ─────────── VIDEO UPLOAD ───────────
+
+model Video {
+  id            Int      @id @default(autoincrement())
+  userId        String   @db.VarChar(16)
+  fileName      String   @db.VarChar(255)
+  fileSize      Int
+  s3Key         String   @db.VarChar(500)
+  s3Url         String   @db.VarChar(500)
+  mimeType      String   @db.VarChar(100)
+  duration      Float?
+  resolution    String?  @db.VarChar(50)
+  format        String?  @db.VarChar(20)
+  thumbnailKey  String?  @db.VarChar(500)
+  thumbnailUrl  String?  @db.VarChar(500)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@map("videos")
+}
+

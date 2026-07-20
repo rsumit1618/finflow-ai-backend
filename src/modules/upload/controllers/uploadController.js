@@ -1,129 +1,86 @@
-import { uploadFile, deleteFile, getPresignedUrl } from '../../../services/s3Service.js';
 import { successResponse } from '../../../utils/apiResponse.js';
-import { createDocument, findUserDocuments, findDocumentById, deleteDocumentById } from '../../../repositories/documentRepository.js';
-import { AppError } from '../../../utils/AppError.js';
+import {
+  uploadMultipleVideos,
+  listUserVideos,
+  getSingleVideo,
+  deleteVideo,
+  uploadVideoThumbnailImage,
+} from '../services/uploadService.js';
 
-export const handleFileUpload = async (req, res, next) => {
+/**
+ * POST /api/upload/videos
+ * Upload 1–5 video files. Max total size: 500MB.
+ * S3 path: {userId}/videos/{timestamp}-{originalname}
+ */
+export const handleMultipleVideoUpload = async (req, res, next) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
-
-    const fileExtension = req.file.originalname.split('.').pop().toLowerCase();
-    const docType = fileExtension === 'pdf' ? 'pdf' : (['jpg', 'jpeg', 'png'].includes(fileExtension) ? 'image' : 'other');
-
-    const s3Key = `documents/${req.user.userId}/${docType}/${Date.now()}-${req.file.originalname}`;
-    await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
-
-    // For general uploads, we can still provide a signed URL immediately
-    const signedUrl = await getPresignedUrl(s3Key);
-
-    return successResponse(res, { url: signedUrl, fileName: s3Key }, 'File uploaded successfully', 201);
+    const result = await uploadMultipleVideos(req.files, req.user.userId);
+    return successResponse(
+      res,
+      result,
+      `${result.totalUploaded} video(s) uploaded successfully`,
+      201
+    );
   } catch (error) {
     next(error);
   }
 };
 
-export const handlePdfUpload = async (req, res, next) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No PDF file uploaded' });
-    }
-
-    const category = req.body.category || 'GENERAL';
-    // Organize S3 path: documents/userId/pdf/timestamp-filename.pdf
-    const s3Key = `documents/${req.user.userId}/pdf/${Date.now()}-${req.file.originalname}`;
-
-    await uploadFile(req.file.buffer, s3Key, req.file.mimetype);
-
-    // Save to Database
-    const document = await createDocument({
-      name: req.file.originalname,
-      category: category.toUpperCase(),
-      s3Key: s3Key,
-      url: s3Key,
-      fileSize: req.file.size,
-      mimeType: req.file.mimetype,
-      userId: req.user.userId,
-    });
-
-    // Add a temporary signed URL for immediate view
-    document.url = await getPresignedUrl(s3Key);
-
-    return successResponse(res, document, 'PDF uploaded and saved successfully', 201);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getUserDocuments = async (req, res, next) => {
+/**
+ * GET /api/upload/videos
+ * List all user videos with pagination (10 per page), sorted by newest first.
+ */
+export const getUserVideos = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const category = req.query.category?.toUpperCase();
 
-    const { documents, total } = await findUserDocuments(req.user.userId, { skip, take: limit, category });
-
-    // Generate temporary signed URLs for each document
-    const documentsWithUrls = await Promise.all(documents.map(async (doc) => {
-      return {
-        ...doc,
-        url: await getPresignedUrl(doc.s3Key)
-      };
-    }));
-
-    return successResponse(res, {
-      documents: documentsWithUrls,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit)
-      }
-    }, 'Documents fetched successfully');
+    const result = await listUserVideos(req.user.userId, { page, limit });
+    return successResponse(res, result, 'Videos fetched successfully');
   } catch (error) {
     next(error);
   }
 };
 
-export const handleFileDelete = async (req, res, next) => {
+/**
+ * GET /api/upload/videos/:id
+ * Get a single video by ID with presigned URLs for video and thumbnail.
+ */
+export const getVideoById = async (req, res, next) => {
   try {
-    const { fileName } = req.body;
-
-    // Security check: Ensure the user is only deleting their own files
-    // The path structure is users/{userId}/... or documents/{userId}/...
-    const pathParts = fileName.split('/');
-    if (pathParts[1] !== req.user.userId.toString()) {
-      throw new AppError('Unauthorized: You can only delete your own files', 403);
-    }
-
-    await deleteFile(fileName);
-    return successResponse(res, null, 'File deleted successfully');
+    const videoId = parseInt(req.params.id);
+    const video = await getSingleVideo(videoId, req.user.userId);
+    return successResponse(res, video, 'Video fetched successfully');
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteUserDocument = async (req, res, next) => {
+/**
+ * DELETE /api/upload/videos/:id
+ * Delete a video (soft delete + remove from S3 + thumbnail cleanup).
+ */
+export const deleteUserVideo = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const documentId = parseInt(id);
-
-    // 1. Find document and verify ownership
-    const document = await findDocumentById(documentId, req.user.userId);
-    if (!document) {
-      throw new AppError('Document not found or access denied', 404);
-    }
-
-    // 2. Delete from S3
-    await deleteFile(document.s3Key);
-
-    // 3. Delete from Database
-    await deleteDocumentById(documentId, req.user.userId);
-
-    return successResponse(res, null, 'Document deleted successfully');
+    const videoId = parseInt(req.params.id);
+    await deleteVideo(videoId, req.user.userId);
+    return successResponse(res, null, 'Video deleted successfully');
   } catch (error) {
     next(error);
   }
 };
+
+/**
+ * POST /api/upload/videos/:id/thumbnail
+ * Upload a thumbnail image (JPEG/PNG/WebP) for a video.
+ */
+export const uploadVideoThumbnail = async (req, res, next) => {
+  try {
+    const videoId = parseInt(req.params.id);
+    const result = await uploadVideoThumbnailImage(videoId, req.user.userId, req.file);
+    return successResponse(res, result, 'Thumbnail uploaded successfully', 201);
+  } catch (error) {
+    next(error);
+  }
+};
+

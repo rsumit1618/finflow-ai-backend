@@ -4,6 +4,7 @@ import { createRateLimiter } from "../../../middlewares/rateLimitMiddleware.js";
 import {
   changePassword,
   getProfile,
+  getQualifications,
   loginUser,
   logoutAllUserSessions,
   logoutUser,
@@ -32,9 +33,8 @@ const authRateLimiter = createRateLimiter({
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name, email, password]
+ *             required: [email, password]
  *             properties:
- *               name: { type: string }
  *               email: { type: string }
  *               password: { type: string }
  *     responses:
@@ -149,7 +149,7 @@ router.post("/logout-all", authMiddleware, logoutAllUserSessions);
  * @swagger
  * /auth/profile:
  *   get:
- *     summary: Get user profile
+ *     summary: Get user profile (includes firstName, lastName, age, college, etc.)
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []
@@ -173,13 +173,31 @@ router.get("/profile", authMiddleware, getProfile);
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name]
  *             properties:
- *               name: { type: string }
+ *               firstName: { type: string }
+ *               lastName: { type: string }
+ *               age: { type: integer }
+ *               college: { type: string }
+ *               qualificationYear: { type: integer }
+ *               address: { type: string }
+ *               highestQualification: { type: string }
+ *               profileImage: { type: string }
  *     responses:
  *       200:
  *         description: Profile updated successfully
  */
 router.put("/profile", authMiddleware, updateProfile);
+
+/**
+ * @swagger
+ * /auth/qualifications:
+ *   get:
+ *     summary: Get list of qualifications (including "Other" option)
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Qualifications fetched successfully
+ */
+router.get("/qualifications", getQualifications);
 
 export default router;

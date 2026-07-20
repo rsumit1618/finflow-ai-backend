@@ -1,97 +1,86 @@
 import express from 'express';
 import multer from 'multer';
-import { handleFileUpload, handleFileDelete, handlePdfUpload, getUserDocuments, deleteUserDocument } from '../controllers/uploadController.js';
+import {
+  handleMultipleVideoUpload,
+  getUserVideos,
+  getVideoById,
+  deleteUserVideo,
+  uploadVideoThumbnail,
+} from '../controllers/uploadController.js';
 import { authMiddleware } from '../../../middlewares/authMiddleware.js';
-import { validate } from '../../../middlewares/validate.js';
-import { deleteFileSchema } from '../validators/uploadValidator.js';
+import { ALLOWED_VIDEO_EXTENSIONS } from '../validators/uploadValidator.js';
 
 const router = express.Router();
 
-// Generic upload (Images/PDFs)
-const upload = multer({
+// Video upload (max 5 files, max 500MB total)
+const videoUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 500 * 1024 * 1024, // 500MB per file
   },
   fileFilter: (_req, file, cb) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-    if (allowedMimeTypes.includes(file.mimetype)) {
+    const ext = file.originalname.substring(file.originalname.lastIndexOf('.')).toLowerCase();
+    if (ALLOWED_VIDEO_EXTENSIONS.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG and PDF are allowed.'));
+      cb(new Error(`Invalid video format. Allowed: ${ALLOWED_VIDEO_EXTENSIONS.join(', ')}`));
     }
   },
 });
 
-// PDF specific upload with DB tracking
-const pdfUpload = multer({
+// Thumbnail upload (single image)
+const thumbnailUpload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB for thumbnail
   },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (allowedImageTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF files are allowed for this endpoint.'));
+      cb(new Error('Thumbnail must be JPEG, PNG, or WebP format.'));
     }
   },
 });
+
+// ========== VIDEO ROUTES ==========
 
 /**
  * @swagger
- * /upload/upload:
+ * /upload/videos:
  *   post:
- *     summary: Upload a general file (S3 Path documents/userId/docType/timestamp-filename)
+ *     summary: Upload 1–5 video files (max 500MB total). Supports MP4, MKV, WebM, AVI, MOV, WMV, FLV, OGV, 3GP, MPEG
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               file:
- *                 type: string
- *                 format: binary
+ *               videos:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 minItems: 1
+ *                 maxItems: 5
  *     responses:
  *       201:
- *         description: File uploaded successfully
+ *         description: Videos uploaded successfully
+ *       400:
+ *         description: Validation error
  */
-router.post('/upload', authMiddleware, upload.single('file'), handleFileUpload);
+router.post('/videos', authMiddleware, videoUpload.array('videos', 5), handleMultipleVideoUpload);
 
 /**
  * @swagger
- * /upload/pdf:
- *   post:
- *     summary: Upload a PDF document (S3 Path documents/userId/pdf/timestamp-filename)
- *     tags: [Upload]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               file:
- *                 type: string
- *                 format: binary
- *               category:
- *                 type: string
- *                 default: GENERAL
- *     responses:
- *       201:
- *         description: PDF uploaded and saved successfully
- */
-router.post('/pdf', authMiddleware, pdfUpload.single('file'), handlePdfUpload);
-
-/**
- * @swagger
- * /upload/documents:
+ * /upload/videos:
  *   get:
- *     summary: Get user documents with pagination and category filter
+ *     summary: Get all user videos with pagination (10 per page), sorted by newest first
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -106,21 +95,17 @@ router.post('/pdf', authMiddleware, pdfUpload.single('file'), handlePdfUpload);
  *         schema:
  *           type: integer
  *           default: 10
- *       - in: query
- *         name: category
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: Documents fetched successfully
+ *         description: Videos fetched successfully
  */
-router.get('/documents', authMiddleware, getUserDocuments);
+router.get('/videos', authMiddleware, getUserVideos);
 
 /**
  * @swagger
- * /upload/documents/{id}:
- *   delete:
- *     summary: Delete a specific document
+ * /upload/videos/{id}:
+ *   get:
+ *     summary: Get a single video by ID with presigned URLs
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -132,31 +117,61 @@ router.get('/documents', authMiddleware, getUserDocuments);
  *           type: integer
  *     responses:
  *       200:
- *         description: Document deleted successfully
+ *         description: Video fetched successfully
+ *       404:
+ *         description: Video not found
  */
-router.delete('/documents/:id', authMiddleware, deleteUserDocument);
+router.get('/videos/:id', authMiddleware, getVideoById);
 
 /**
  * @swagger
- * /upload/file:
+ * /upload/videos/{id}:
  *   delete:
- *     summary: Delete a file from S3 by filename
+ *     summary: Delete a video (removes from S3 + soft delete)
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Video deleted successfully
+ */
+router.delete('/videos/:id', authMiddleware, deleteUserVideo);
+
+/**
+ * @swagger
+ * /upload/videos/{id}/thumbnail:
+ *   post:
+ *     summary: Upload a thumbnail image (JPEG/PNG/WebP) for a video
+ *     tags: [Upload]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
- *               fileName:
+ *               thumbnail:
  *                 type: string
+ *                 format: binary
  *     responses:
- *       200:
- *         description: File deleted successfully
+ *       201:
+ *         description: Thumbnail uploaded successfully
  */
-router.delete('/file', authMiddleware, validate(deleteFileSchema), handleFileDelete);
+router.post('/videos/:id/thumbnail', authMiddleware, thumbnailUpload.single('thumbnail'), uploadVideoThumbnail);
 
 export default router;
+
