@@ -15,33 +15,21 @@ export const findActiveRefreshTokenByHash = async (tokenHash) => {
     where: {
       tokenHash,
       revokedAt: null,
-      expiresAt: {
-        gt: new Date(),
-      },
+      expiresAt: { gt: new Date() },
     },
   });
 };
 
 export const revokeRefreshTokenByHash = async (tokenHash) => {
   return prisma.refreshToken.updateMany({
-    where: {
-      tokenHash,
-      revokedAt: null,
-    },
-    data: {
-      revokedAt: new Date(),
-    },
+    where: { tokenHash, revokedAt: null },
+    data: { revokedAt: new Date() },
   });
 };
 
 export const revokeAllRefreshTokensForUser = async (userId) => {
   return prisma.refreshToken.updateMany({
-    where: {
-      userId,
-      revokedAt: null,
-    },
-    data: {
-      revokedAt: new Date(),
-    },
+    where: { userId, revokedAt: null },
+    data: { revokedAt: new Date() },
   });
 };

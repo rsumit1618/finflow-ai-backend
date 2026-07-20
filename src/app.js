@@ -2,8 +2,6 @@ import express from "express";
 import cors from "cors";
 import rateLimit from 'express-rate-limit';
 import authRoutes from "./modules/auth/routes/authRoutes.js";
-import categoryRoutes from "./modules/category/routes/categoryRoutes.js";
-import expenseRoutes from "./modules/expense/routes/expenseRoutes.js";
 import healthRoutes from "./modules/health/routes/healthRoutes.js";
 import { loggerMiddleware } from "./middlewares/loggerMiddleware.js";
 import { corsOptions, securityHeaders } from "./middlewares/securityMiddleware.js";
@@ -76,14 +74,10 @@ app.get('/force-error', (_req, _res) => {
 
 app.use("/api/health", healthRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/expenses", expenseRoutes);
 app.use('/api/upload', uploadRoutes);
 
 app.use(`/api/${API_VERSION}/health`, healthRoutes);
 app.use(`/api/${API_VERSION}/auth`, authRoutes);
-app.use(`/api/${API_VERSION}/categories`, categoryRoutes);
-app.use(`/api/${API_VERSION}/expenses`, expenseRoutes);
 app.use(`/api/${API_VERSION}/upload`, uploadRoutes);
 
 // Register Sentry's Express error handler
