@@ -6,13 +6,15 @@
 
 ## 📌 Project Overview
 
-FinFlow AI is a full-stack expense management application. This repository contains the **backend API** built with Node.js + Express, deployed on AWS EC2 with production-grade tools and practices.
+FinFlow AI is a full-stack application. This repository contains the **backend API** built with Node.js + Express, deployed on AWS EC2 with production-grade tools and practices.
 
 ### Key Features
 
 - ✅ JWT Authentication (Access + Refresh Tokens)
 - ✅ Distributed Rate Limiting (Redis)
 - ✅ File Upload to S3 (PDFs, Images)
+- ✅ **Video Upload** — MP4, MKV, WebM, AVI, MOV, WMV, FLV, etc. (max 5 files / 500MB)
+- ✅ **Thumbnail Support** — Optional thumbnail images for videos
 - ✅ Error Tracking with Sentry
 - ✅ API Documentation with Swagger
 - ✅ CI/CD with GitHub Actions
@@ -28,49 +30,53 @@ FinFlow AI is a full-stack expense management application. This repository conta
 ```text
 finflow-ai-backend/
 ├── .github/workflows/
-│   └── deploy-backend.yml # GitHub Actions CI/CD
+│   └── deploy-backend.yml     # GitHub Actions CI/CD
 ├── prisma/
-│   ├── schema.prisma      # Database schema
-│   └── migrations/        # Migration files
+│   ├── schema.prisma           # Database schema (User, Profile, RefreshToken, Video, Qualification)
+│   └── migrations/             # Migration files
 ├── src/
 │   ├── config/
-│   │   ├── env.js         # Environment variables
-│   │   ├── prisma.js      # Prisma client
-│   │   ├── redis.js       # Redis connection
-│   │   ├── s3.js          # AWS S3 client
-│   │   ├── sentry.js      # Sentry config
-│   │   └── swagger.js     # Swagger/OpenAPI config
+│   │   ├── env.js              # Environment variables
+│   │   ├── prisma.js           # Prisma client
+│   │   ├── redis.js            # Redis connection
+│   │   ├── s3.js               # AWS S3 client
+│   │   ├── sentry.js           # Sentry config
+│   │   └── swagger.js          # Swagger/OpenAPI config
 │   ├── constants/
-│   │   └── appConstants.js# App constants (API_VERSION, etc.)
+│   │   └── appConstants.js     # App constants (API_VERSION, etc.)
 │   ├── middlewares/
 │   │   ├── authMiddleware.js    # JWT verification
-│   │   ├── errorMiddleware.js   # Global error handler
+│   │   ├── errorMiddleware.js   # Global error handler (Zod, Prisma, AppError)
 │   │   ├── loggerMiddleware.js  # Request logging
+│   │   ├── rateLimitMiddleware.js# In-memory rate limiter (for auth routes)
 │   │   ├── requestIdMiddleware.js# Request ID generator
-│   │   └── securityMiddleware.js # CORS, security headers
+│   │   ├── securityMiddleware.js # CORS, security headers
+│   │   └── validate.js          # Zod validation middleware
 │   ├── modules/
-│   │   ├── auth/
-│   │   │   ├── controllers/
-│   │   │   ├── routes/
-│   │   │   ├── services/
-│   │   │   └── validators/
-│   │   ├── category/
-│   │   ├── expense/
-│   │   ├── health/
-│   │   └── upload/
-│   ├── repositories/
-│   │   ├── userRepository.js
+│   │   ├── auth/               # Authentication + Profile management
+│   │   │   ├── controllers/    # Thin — delegates to service
+│   │   │   ├── routes/         # Route definitions + Swagger docs
+│   │   │   ├── services/       # Business logic (register, login, profile, etc.)
+│   │   │   └── validators/     # Zod schemas
+│   │   ├── health/             # Health check endpoint
+│   │   │   └── routes/
+│   │   └── upload/             # File upload — PDF, images, videos
+│   │       ├── controllers/    # Thin — delegates to service
+│   │       ├── routes/         # Routes + multer config + Swagger docs
+│   │       ├── services/       # *** NEW *** Business logic for uploads
+│   │       └── validators/     # MIME types, extensions, file helpers
+│   ├── repositories/           # Data access layer (Prisma queries)
+│   │   ├── userRepository.js   # Users + Profiles + Qualifications
 │   │   ├── refreshTokenRepository.js
-│   │   ├── documentRepository.js
-│   │   └── ...
+│   │   └── videoRepository.js  # *** NEW *** Video CRUD
+│   ├── services/               # Shared services
+│   │   └── s3Service.js        # S3 upload, delete, presigned URLs
 │   └── utils/
-│       ├── AppError.js    # Custom error class
-│       ├── apiResponse.js # Success response helper
-│       └── ...
-├── .env                   # Environment variables (not in Git)
-├── .env.example           # Example env file
-├── ecosystem.config.cjs   # PM2 configuration
-├── server.js              # Entry point
+│       ├── AppError.js         # Custom error class
+│       └── apiResponse.js      # Success response helper
+├── .env                         # Environment variables (not in Git)
+├── ecosystem.config.cjs         # PM2 configuration
+├── server.js                    # Entry point
 ├── package.json
 └── README.md
 ```
@@ -166,7 +172,7 @@ GRANT ALL PRIVILEGES ON DATABASE finflow_ai TO finflow_user;
 npx prisma generate
 
 # Apply migrations
-npx prisma migrate dev --name init
+npx prisma migrate dev
 
 # Or push directly (if migration issues)
 npx prisma db push
@@ -382,8 +388,8 @@ npx prisma generate
 -- View users
 SELECT * FROM users;
 
--- View documents
-SELECT * FROM documents;
+-- View videos
+SELECT * FROM videos;
 ```
 
 ---
@@ -433,19 +439,82 @@ redis-cli MONITOR
 
 ## 🧪 API Endpoints
 
+### Authentication & Profile
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| POST | `/api/auth/register` | ❌ | Register new user |
+| POST | `/api/auth/login` | ❌ | Login user |
+| POST | `/api/auth/refresh-token` | ❌ | Refresh access token |
+| POST | `/api/auth/logout` | ❌ | Logout (revoke refresh token) |
+| POST | `/api/auth/logout-all` | ✅ | Logout from all sessions |
+| POST | `/api/auth/change-password` | ✅ | Change user password |
+| **GET** | **`/api/auth/profile`** | **✅** | **Get user profile (firstName, lastName, age, college, etc.)** |
+| **PUT** | **`/api/auth/profile`** | **✅** | **Update user profile fields** |
+| GET | `/api/auth/qualifications` | ❌ | Get list of qualifications |
+| GET | `/api/health` | ❌ | Health check |
+
+### Video Upload
+
+| Method | Endpoint | Auth | Description |
+|--------|----------|------|-------------|
+| **POST** | **`/api/upload/videos`** | **✅** | **Upload 1–5 video files (max 500MB total). Formats: MP4, MKV, WebM, AVI, MOV, WMV, FLV, OGV, 3GP, MPEG** |
+| **GET** | **`/api/upload/videos`** | **✅** | **List all user videos, paginated (10/page), sorted by newest first** |
+| **GET** | **`/api/upload/videos/:id`** | **✅** | **Get single video with presigned play URL + thumbnail URL** |
+| **DELETE** | **`/api/upload/videos/:id`** | **✅** | **Delete video (removes from S3 + soft delete)** |
+| **POST** | **`/api/upload/videos/:id/thumbnail`** | **✅** | **Upload thumbnail image (JPEG/PNG/WebP) for a video** |
+
+### API Documentation
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /api/auth/register | Register new user |
-| POST | /api/auth/login | Login user |
-| GET | /api/auth/profile | Get user profile |
-| POST | /api/auth/refresh | Refresh access token |
-| POST | /api/auth/logout | Logout user |
-| GET | /api/health | Health check |
-| GET | /api/docs | Swagger documentation |
-| POST | /api/upload/pdf | Upload PDF document |
-| GET | /api/upload/documents | Get user documents |
-| CRUD | /api/categories | Category operations |
-| CRUD | /api/expenses | Expense operations |
+| GET | `/api-docs` | Swagger UI — interactive API documentation |
+
+---
+
+## 📦 Frontend Integration Examples
+
+### Upload Videos
+
+```javascript
+const formData = new FormData();
+formData.append('videos', videoFile1);  // *.mp4, *.mkv, *.webm, etc.
+formData.append('videos', videoFile2);  // up to 5 files
+
+const res = await fetch('/api/upload/videos', {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  body: formData,
+});
+
+const data = await res.json();
+// data.data.videos = [{ id, fileName, fileSize, format, url, createdAt }]
+```
+
+### Fetch Videos
+
+```javascript
+const res = await fetch('/api/upload/videos?page=1&limit=10', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+const data = await res.json();
+// data.data.videos = [{ id, fileName, url, thumbnailUrl, ... }]
+// data.data.pagination = { total, page, limit, totalPages }
+```
+
+### Upload Thumbnail
+
+```javascript
+const thumbData = new FormData();
+thumbData.append('thumbnail', imageFile);  // JPEG/PNG/WebP
+
+const res = await fetch(`/api/upload/videos/${videoId}/thumbnail`, {
+  method: 'POST',
+  headers: { Authorization: `Bearer ${token}` },
+  body: thumbData,
+});
+```
 
 ---
 
