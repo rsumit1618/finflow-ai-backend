@@ -5,69 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FinFlow AI — Backend Architecture & Production Guide</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+            50% { box-shadow: 0 0 12px 6px rgba(34, 197, 94, 0.2); }
+        }
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 4px rgba(251, 191, 36, 0.3); }
+            50% { text-shadow: 0 0 16px rgba(251, 191, 36, 0.6); }
+        }
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        @keyframes blink {
+            50% { border-color: transparent; }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background: #f0f4f8;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
             color: #1e293b;
-            padding: 2rem 1rem;
+            padding: 1rem 0.5rem;
             line-height: 1.7;
+            min-height: 100vh;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
 
-        /* Header */
+        /* ===== ANIMATED HEADER ===== */
         .header {
             text-align: center;
-            margin-bottom: 3rem;
-            background: linear-gradient(135deg, #1f4e79, #2a6b9c);
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #0f2b4a 0%, #1f4e79 40%, #2a6b9c 100%);
+            background-size: 200% 200%;
             color: white;
-            padding: 2.5rem 2rem;
-            border-radius: 24px;
+            padding: 1.8rem 1.2rem;
+            border-radius: 16px;
             box-shadow: 0 8px 30px rgba(31, 78, 121, 0.25);
+            animation: fadeInUp 0.8s ease-out, shimmer 6s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
         }
-
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        .header .header-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 0.25rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
         .header h1 {
-            font-size: 2.8rem;
+            font-size: 3rem;
             font-weight: 800;
             letter-spacing: -0.02em;
+            position: relative;
+            z-index: 1;
         }
-
-        .header p {
-            font-size: 1.1rem;
+        .header h1 .icon {
+            display: inline-block;
+            animation: spin 4s linear infinite;
+        }
+        .header > p {
+            font-size: 1rem;
             opacity: 0.9;
-            margin-top: 0.5rem;
+            margin-top: 0.3rem;
+            position: relative;
+            z-index: 1;
+            color: #93c5fd;
+            font-weight: 500;
         }
-
-        .header .meta {
+        .header .status-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 1.2rem;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+        .header .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.95rem;
+            background: rgba(255,255,255,0.08);
+            padding: 0.4rem 1rem;
+            border-radius: 30px;
+            backdrop-filter: blur(4px);
+        }
+        .header .status-item .status-meta {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-left: 0.3rem;
+            color: #93c5fd;
+        }
+        .header .status-item strong {
+            color: #86efac;
+        }
+        .header .status-item .url-link {
+            color: #fbbf24;
+            text-decoration: none;
+            font-weight: 600;
             font-size: 0.9rem;
-            opacity: 0.75;
+            animation: glow 2s ease-in-out infinite;
+            transition: color 0.3s;
+        }
+        .header .status-item .url-link:hover {
+            color: #fde68a;
+        }
+        .header .meta {
+            font-size: 0.85rem;
             margin-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.15);
             padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.12);
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            color: rgba(255,255,255,0.8);
+        }
+        .header .meta .meta-sep {
+            opacity: 0.4;
+            font-weight: 300;
         }
 
-        /* Cards */
+        /* ===== CARDS ===== */
         .card {
             background: white;
             border-radius: 16px;
-            padding: 1.8rem 2rem;
-            margin-bottom: 1.8rem;
+            padding: 1.5rem 1.2rem;
+            margin-bottom: 1.5rem;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
             border: 1px solid #e9edf4;
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
         }
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
+        .card:nth-child(5) { animation-delay: 0.4s; }
+        .card:nth-child(6) { animation-delay: 0.5s; }
+        .card:nth-child(7) { animation-delay: 0.6s; }
+        .card:nth-child(8) { animation-delay: 0.7s; }
+        .card:nth-child(9) { animation-delay: 0.8s; }
 
         .card:hover {
-            box-shadow: 0 6px 24px rgba(31, 78, 121, 0.08);
+            box-shadow: 0 8px 32px rgba(31, 78, 121, 0.12);
+            transform: translateY(-2px);
+            border-color: #bfdbfe;
         }
 
         .card-title {
@@ -88,12 +224,14 @@
             padding: 0.2rem 0.9rem;
             border-radius: 30px;
             letter-spacing: 0.02em;
+            animation: scaleIn 0.4s ease-out;
         }
-
         .badge-green { background: #0b7e3d; }
         .badge-orange { background: #b36b00; }
         .badge-purple { background: #6b21a5; }
         .badge-red { background: #b91c1c; }
+        .badge-blue { background: #2563eb; }
+        .badge-teal { background: #0d9488; }
 
         .sub-title {
             font-size: 1.1rem;
@@ -102,14 +240,8 @@
             color: #0f172a;
         }
 
-        ul, ol {
-            padding-left: 1.5rem;
-            margin-bottom: 0.8rem;
-        }
-
-        li {
-            margin-bottom: 0.35rem;
-        }
+        ul, ol { padding-left: 1.5rem; margin-bottom: 0.8rem; }
+        li { margin-bottom: 0.35rem; }
 
         code {
             background: #eef2f6;
@@ -123,37 +255,42 @@
         pre {
             background: #0f172a;
             color: #e2e8f0;
-            padding: 1.2rem 1.5rem;
+            padding: 1rem 1.2rem;
             border-radius: 12px;
             overflow-x: auto;
-            font-size: 0.85rem;
+            -webkit-overflow-scrolling: touch;
+            font-size: 0.8rem;
             font-family: 'JetBrains Mono', monospace;
             margin: 0.8rem 0 1.2rem;
             border: 1px solid #1e293b;
+            transition: all 0.3s;
+            max-width: 100%;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
-
+        pre:hover {
+            border-color: #1f4e79;
+            box-shadow: 0 0 0 1px rgba(31, 78, 121, 0.2);
+        }
         pre .cmd { color: #a5f3fc; }
         pre .comment { color: #94a3b8; font-style: italic; }
         pre .highlight { color: #fbbf24; }
+        pre .err { color: #fca5a5; }
+        pre .ok { color: #86efac; }
 
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 1.5rem;
-        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1.5rem; }
 
         @media (max-width: 768px) {
-            .grid-2, .grid-3 {
-                grid-template-columns: 1fr;
-            }
-            .header h1 { font-size: 2rem; }
-            .card { padding: 1.2rem; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.6rem; }
+            .header { padding: 1.2rem 0.8rem; border-radius: 12px; }
+            .header .status-row { gap: 0.6rem; }
+            .header .status-item { font-size: 0.8rem; padding: 0.25rem 0.6rem; }
+            .card { padding: 1rem 0.8rem; }
+            .card-title { font-size: 1.1rem; }
+            body { padding: 0.5rem 0.25rem; }
         }
 
         .tag {
@@ -165,11 +302,12 @@
             font-weight: 500;
             color: #334155;
             margin-right: 0.3rem;
+            transition: all 0.3s;
         }
-
+        .tag:hover {
+            transform: scale(1.05);
+        }
         .tag-done { background: #dcfce7; color: #166534; }
-        .tag-pending { background: #ffedd5; color: #9a3412; }
-        .tag-progress { background: #dbeafe; color: #1e40af; }
 
         .qa-box {
             background: #f8fafc;
@@ -177,11 +315,14 @@
             padding: 1rem 1.5rem;
             margin: 1rem 0;
             border-radius: 0 8px 8px 0;
+            transition: all 0.3s;
         }
-
-        .qa-box strong {
-            color: #1f4e79;
+        .qa-box:hover {
+            background: #f1f5f9;
+            border-left-width: 6px;
+            transform: translateX(4px);
         }
+        .qa-box strong { color: #1f4e79; }
 
         .footnote {
             font-size: 0.85rem;
@@ -190,182 +331,331 @@
             padding-top: 1.5rem;
             margin-top: 2rem;
             text-align: center;
+            animation: fadeInUp 0.8s ease-out 0.9s both;
         }
 
-        .status-done::before { content: "✅ "; }
-        .status-pending::before { content: "⏳ "; }
-        .status-progress::before { content: "🔄 "; }
+        /* ===== TABLE STYLES ===== */
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0.8rem 0;
+            max-width: 100%;
+        }
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 420px;
+        }
+        .api-table th {
+            background: #1f4e79;
+            color: white;
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        .api-table th:first-child { border-radius: 8px 0 0 0; }
+        .api-table th:last-child { border-radius: 0 8px 0 0; }
+        .api-table td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.2s;
+        }
+        .api-table tr { transition: all 0.2s; }
+        .api-table tr:hover td {
+            background: #f0f7ff;
+        }
+        .api-table tr:last-child td:first-child { border-radius: 0 0 0 8px; }
+        .api-table tr:last-child td:last-child { border-radius: 0 0 8px 0; }
+        .api-table .method-get { color: #2563eb; font-weight: 700; }
+        .api-table .method-post { color: #0b7e3d; font-weight: 700; }
+        .api-table .method-put { color: #b36b00; font-weight: 700; }
+        .api-table .method-delete { color: #b91c1c; font-weight: 700; }
+        .auth-yes { color: #0b7e3d; font-weight: 600; }
+        .auth-no { color: #64748b; }
+
+        /* ===== STATUS DOT ===== */
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            vertical-align: middle;
+            background: #22c55e;
+            animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 6px rgba(34, 197, 94, 0.4);
+        }
     </style>
 </head>
 <body>
-
 <div class="container">
 
     <!-- ===== HEADER ===== -->
     <div class="header">
-        <h1>⚙️ FinFlow AI — Production Architecture Guide</h1>
-        <p>Complete documentation for scalable Node.js backend with PostgreSQL, Redis, S3, Sentry, Swagger &amp; CI/CD</p>
+        <div class="header-badge">🚀 PRODUCTION</div>
+        <h1><span class="icon">⚙️</span> FinFlow AI Backend Guide</h1>
+        <p>Node.js + Express · PostgreSQL · Redis · AWS S3 · Sentry · Swagger · CI/CD</p>
+        
+        <div class="status-row">
+            <div class="status-item">
+                <span class="status-dot"></span>
+                <span>Server Status: <strong>Online</strong></span>
+                <span class="status-meta">Uptime: 99.9%</span>
+            </div>
+            <div class="status-item">
+                <span>🌐</span>
+                <a href="http://56.228.4.142:3000/api-docs" class="url-link">56.228.4.142:3000/api-docs</a>
+            </div>
+            <div class="status-item">
+                <span>📅</span>
+                <span>July 2026</span>
+            </div>
+        </div>
+
         <div class="meta">
-            📅 July 2026 &nbsp;·&nbsp; Architecture: Modular Layered &nbsp;·&nbsp; 🚀 Production Ready
+            <span>🏗️ Modular Layered Architecture</span>
+            <span class="meta-sep">·</span>
+            <span>⚡ Production Ready</span>
+            <span class="meta-sep">·</span>
+            <span>🔐 JWT Auth</span>
+            <span class="meta-sep">·</span>
+            <span>📊 PM2 Cluster</span>
         </div>
     </div>
 
-    <!-- ===== ARCHITECTURE SECTION ===== -->
+    <!-- ===== ARCHITECTURE ===== -->
     <div class="card">
         <div class="card-title">🏗️ Modular Architecture & API Flow <span class="badge badge-purple">Standard</span></div>
-        <p style="margin-bottom:1rem;">The backend is built using a <strong>Modular Layered Architecture</strong> to ensure independent scaling of features like Auth, Expenses, and Document AI.</p>
-
+        <p style="margin-bottom:1rem;">Built using <strong>Modular Layered Architecture</strong> for independent scaling of Auth, Upload, and future modules.</p>
         <div class="sub-title">📌 Request Execution Journey</div>
-        <pre><span class="comment">// 1. Client sends request to Route</span>
+        <pre><span class="comment">// 1. Client sends request</span>
 <span class="cmd">Route</span> (URL definition & Swagger JSDoc)
      ↓
 <span class="cmd">Middleware</span> (Auth Check, Rate Limiting, Zod Validation)
      ↓
-<span class="cmd">Controller</span> (Handle HTTP req/res, calling services)
+<span class="cmd">Controller</span> (Handle req/res, call services)
      ↓
-<span class="cmd">Service</span> (Business logic, domain rules, calling repositories)
+<span class="cmd">Service</span> (Business logic, domain rules)
      ↓
 <span class="cmd">Repository</span> (Prisma database access ONLY)
      ↓
 <span class="cmd">PostgreSQL</span> (Data persistence)</pre>
+        <div class="sub-title">🗂️ Tech Stack</div>
+        <div class="grid-4">
+            <div><span class="tag tag-done">Node.js 18+</span> <span class="tag tag-done">Express 5</span> <span class="tag tag-done">Prisma 6</span></div>
+            <div><span class="tag tag-done">PostgreSQL 17</span> <span class="tag tag-done">Redis 7</span> <span class="tag tag-done">AWS S3</span></div>
+            <div><span class="tag tag-done">PM2 Cluster</span> <span class="tag tag-done">Nginx</span> <span class="tag tag-done">Sentry</span></div>
+            <div><span class="tag tag-done">JWT Auth</span> <span class="tag tag-done">Swagger</span> <span class="tag tag-done">Zod</span></div>
+        </div>
     </div>
 
-    <!-- ===== PHASE 5: ADVANCED BACKEND ===== -->
+    <!-- ===== FULL API REFERENCE ===== -->
     <div class="card">
-        <div class="card-title">📁 Phase 5 — Document AI & Storage <span class="badge">New</span></div>
+        <div class="card-title">📋 Complete API Reference <span class="badge badge-blue">v1</span></div>
+        <p style="margin-bottom:0.8rem;">Base URL: <code>http://56.228.4.142:3000/api/v1</code> &nbsp;|&nbsp; Auth: <code>Authorization: Bearer <token></code></p>
+
+        <div class="sub-title">🔐 Authentication & Profile</div>
+        <div class="table-wrapper"><table class="api-table">
+            <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method-post">POST</span></td><td><code>/auth/register</code></td><td><span class="auth-no">❌</span></td><td>Register (email, password)</td></tr>
+                <tr><td><span class="method-post">POST</span></td><td><code>/auth/login</code></td><td><span class="auth-no">❌</span></td><td>Login & get tokens</td></tr>
+                <tr><td><span class="method-post">POST</span></td><td><code>/auth/refresh-token</code></td><td><span class="auth-no">❌</span></td><td>Refresh access token</td></tr>
+                <tr><td><span class="method-post">POST</span></td><td><code>/auth/logout</code></td><td><span class="auth-no">❌</span></td><td>Revoke refresh token</td></tr>
+                <tr><td><span class="method-post">POST</span></td><td><code>/auth/logout-all</code></td><td><span class="auth-yes">✅</span></td><td>Revoke all sessions</td></tr>
+                <tr><td><span class="method-post">POST</span></td><td><code>/auth/change-password</code></td><td><span class="auth-yes">✅</span></td><td>Change password</td></tr>
+                <tr><td><span class="method-get">GET</span></td><td><code>/auth/profile</code></td><td><span class="auth-yes">✅</span></td><td>Get profile (name, age, college, etc.)</td></tr>
+                <tr><td><span class="method-put">PUT</span></td><td><code>/auth/profile</code></td><td><span class="auth-yes">✅</span></td><td>Update profile fields</td></tr>
+                <tr><td><span class="method-get">GET</span></td><td><code>/auth/qualifications</code></td><td><span class="auth-no">❌</span></td><td>List qualifications</td></tr>
+            </tbody>
+        </table></div>
+
+        <div class="sub-title">📹 Video Upload</div>
+        <div class="table-wrapper"><table class="api-table">
+            <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method-post">POST</span></td><td><code>/upload/videos</code></td><td><span class="auth-yes">✅</span></td><td>Upload 1–5 videos (max 500MB). MP4, MKV, WebM, AVI, etc.</td></tr>
+                <tr><td><span class="method-get">GET</span></td><td><code>/upload/videos</code></td><td><span class="auth-yes">✅</span></td><td>List user videos (paginated, 10/page)</td></tr>
+                <tr><td><span class="method-get">GET</span></td><td><code>/upload/videos/:id</code></td><td><span class="auth-yes">✅</span></td><td>Get video with presigned URLs</td></tr>
+                <tr><td><span class="method-delete">DELETE</span></td><td><code>/upload/videos/:id</code></td><td><span class="auth-yes">✅</span></td><td>Soft delete + remove from S3</td></tr>
+                <tr><td><span class="method-post">POST</span></td><td><code>/upload/videos/:id/thumbnail</code></td><td><span class="auth-yes">✅</span></td><td>Upload thumbnail (JPEG/PNG/WebP, max 5MB)</td></tr>
+            </tbody>
+        </table></div>
+
+        <div class="sub-title">❤️ Health & Docs</div>
+        <div class="table-wrapper"><table class="api-table">
+            <thead><tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td><span class="method-get">GET</span></td><td><code>/health</code></td><td><span class="auth-no">❌</span></td><td>Health check (status, service, timestamp)</td></tr>
+                <tr><td><span class="method-get">GET</span></td><td><code>/api-docs</code></td><td><span class="auth-no">❌</span></td><td>Swagger UI interactive docs</td></tr>
+            </tbody>
+        </table></div>
+    </div>
+
+    <!-- ===== USE CASES ===== -->
+    <div class="card">
+        <div class="card-title">🎯 Production Use Cases <span class="badge badge-teal">Real World</span></div>
         <div class="grid-2">
             <div>
-                <div class="sub-title">✅ S3 Hierarchy (AI-Ready)</div>
-                <p>Files are organized into logical folders for future Vector search/RAG processing.</p>
+                <div class="sub-title">🎓 Student Onboarding</div>
                 <ul>
-                    <li><code>documents/{userId}/pdf/</code> — Financial docs</li>
-                    <li><code>documents/{userId}/image/</code> — Receipts/Photos</li>
-                    <li><code>documents/{userId}/other/</code> — General files</li>
+                    <li>Register → JWT access + refresh tokens</li>
+                    <li>Complete profile (name, age, college, qualification)</li>
+                    <li>Upload profile image to S3</li>
+                    <li>Data persisted in PostgreSQL via Prisma</li>
                 </ul>
             </div>
             <div>
-                <div class="sub-title">✅ Secure Document Access</div>
+                <div class="sub-title">🎬 Video Management</div>
                 <ul>
-                    <li><strong>Private Bucket:</strong> No public access allowed.</li>
-                    <li><strong>Presigned URLs:</strong> Temporary 1-hour access links.</li>
-                    <li><strong>User Isolation:</strong> Strict DB check for document ownership.</li>
+                    <li>Upload educational videos (up to 5 at once)</li>
+                    <li>Secure S3 storage with presigned URLs</li>
+                    <li>Thumbnails for gallery preview</li>
+                    <li>Paginated browsing + soft-delete</li>
+                </ul>
+            </div>
+            <div>
+                <div class="sub-title">🛡️ Security</div>
+                <ul>
+                    <li>Redis rate limiting (MemoryStore fallback)</li>
+                    <li>JWT access tokens: 15min expiry</li>
+                    <li>Refresh token rotation + theft detection</li>
+                    <li>Sentry captures 500 errors</li>
+                </ul>
+            </div>
+            <div>
+                <div class="sub-title">🚀 CI/CD</div>
+                <ul>
+                    <li>Git push → GitHub Actions → EC2 deploy</li>
+                    <li>PM2 cluster mode (max CPU cores)</li>
+                    <li>Nginx reverse proxy</li>
+                    <li>Zero-downtime restarts</li>
                 </ul>
             </div>
         </div>
-
-        <div class="sub-title">📌 Pagination & Filtering Logic</div>
-        <pre><span class="comment">// GET /api/v1/upload/documents?page=1&limit=10&category=EXPENSE</span>
-- Default Limit: 10 docs per page
-- Filtering: Can fetch by CATEGORY (EXPENSE, OFFICE, etc.)
-- Metadata: Returns Total Count, Total Pages, and Current Page</pre>
     </div>
 
-    <!-- ===== INFRASTRUCTURE CONFIGURATION ===== -->
+    <!-- ===== ENV CONFIG ===== -->
     <div class="card">
-        <div class="card-title">🔑 Configuration & Environment <span class="badge badge-orange">Security</span></div>
-        <div class="sub-title">📄 .env Breakdown (Dummy Example)</div>
+        <div class="card-title">🔑 Environment Configuration <span class="badge badge-orange">Security</span></div>
         <div class="grid-2">
             <div>
-                <pre><span class="comment"># Database (Prisma)</span>
+                <pre><span class="comment"># Database & Auth</span>
 DATABASE_URL="postgresql://user:pass@localhost:5432/finflow"
-
-<span class="comment"># Auth (JWT)</span>
-JWT_SECRET="long_random_secret_for_access"
-JWT_REFRESH_SECRET="long_random_secret_for_refresh"
-
-<span class="comment"># Cloud Storage (AWS S3)</span>
+JWT_SECRET="long_random_secret"
+JWT_REFRESH_SECRET="long_random_refresh"
+<span class="comment"># S3 Storage</span>
 AWS_ACCESS_KEY_ID="AKIA_DUMMY_123"
 AWS_SECRET_ACCESS_KEY="abc/123/dummy"
-S3_BUCKET_NAME="finflow-ai-docs"</pre>
+S3_BUCKET_NAME="finflow-ai-docs"
+AWS_REGION="eu-north-1"</pre>
             </div>
             <div>
-                <pre><span class="comment"># Caching (Redis)</span>
+                <pre><span class="comment"># Redis (Rate Limiting)</span>
 REDIS_HOST="localhost"
 REDIS_PORT=6379
-
-<span class="comment"># Error Tracking (Sentry)</span>
+<span class="comment"># Monitoring</span>
 SENTRY_DSN="https://key@sentry.io/123"
-
-<span class="comment"># CORS Configuration</span>
+<span class="comment"># App</span>
+PORT=3000
+NODE_ENV=production
 CORS_ORIGIN="http://localhost:3000"</pre>
             </div>
         </div>
     </div>
 
-    <!-- ===== SWAGGER & MONITORING ===== -->
+    <!-- ===== AWS COMMANDS ===== -->
     <div class="card">
-        <div class="card-title">📊 Swagger & Monitoring <span class="badge badge-green">Live Docs</span></div>
-        <div class="grid-2">
-            <div>
-                <div class="sub-title">📚 Interactive Documentation</div>
-                <p>Test APIs directly from the browser with JWT support.</p>
-                <ul>
-                    <li><strong>Local:</strong> <a href="http://localhost:3000/api-docs">localhost:3000/api-docs</a></li>
-                    <li><strong>AWS:</strong> <a href="http://16.171.113.12:3000/api-docs">16.171.113.12:3000/api-docs</a></li>
-                </ul>
-            </div>
-            <div>
-                <div class="sub-title">🛡️ Monitoring Rules</div>
-                <ul>
-                    <li><strong>Sentry:</strong> Captures only 500+ (Server) errors.</li>
-                    <li><strong>Redis:</strong> Auto-fallback to MemoryStore if server is down.</li>
-                    <li><strong>PM2:</strong> Max instances (Cluster mode) enabled.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-
-    <!-- ===== QUESTIONS & CLARIFICATIONS ===== -->
-    <div class="card">
-        <div class="card-title">❓ Technical Q&A <span class="badge">FAQ</span></div>
-
-        <div class="qa-box">
-            <strong>Q: How do I add a new feature (Module)?</strong>
-            <p><strong>A:</strong> 1. Update <code>schema.prisma</code> & Migrate. 2. Create Repository. 3. Build Module folder (routes/controllers/services). 4. Register in <code>app.js</code>.</p>
-        </div>
-
-        <div class="qa-box">
-            <strong>Q: Why use Repositories separately from Services?</strong>
-            <p><strong>A:</strong> Separation of Concerns. Services handle business logic (deciding WHAT to do), while Repositories handle database implementation (HOW to save/fetch).</p>
-        </div>
-
-        <div class="qa-box">
-            <strong>Q: Why do S3 URLs expire in 1 hour?</strong>
-            <p><strong>A:</strong> For security. If a URL is leaked, it becomes useless after 1 hour. This protects sensitive financial documents from unauthorized long-term access.</p>
-        </div>
-    </div>
-
-    <!-- ===== COMMAND REFERENCE ===== -->
-    <div class="card">
-        <div class="card-title">⌨️ Essential Deployment Commands</div>
+        <div class="card-title">🖥️ AWS EC2 Quick Commands <span class="badge badge-red">Must Know</span></div>
+        <p style="margin-bottom:0.8rem;">EC2: <code>56.228.4.142</code> &nbsp;|&nbsp; Key: <code>finflow-ai-key.pem</code></p>
         <div class="grid-3">
             <div>
-                <div class="sub-title">Production Sync</div>
-                <pre>git pull
-npm install
-npx prisma generate
-npx prisma migrate deploy
-pm2 restart all</pre>
+                <div class="sub-title">🔌 SSH & File Transfer</div>
+                <pre><span class="cmd">ssh -i finflow-ai-key.pem ubuntu@56.228.4.142</span>
+<span class="cmd">scp -i finflow-ai-key.pem ./file ubuntu@56.228.4.142:~/</span>
+<span class="cmd">scp -i finflow-ai-key.pem -r ./folder ubuntu@56.228.4.142:~/</span>
+<span class="cmd">scp -i finflow-ai-key.pem ubuntu@56.228.4.142:~/file ./</span></pre>
             </div>
             <div>
-                <div class="sub-title">Debug & Logs</div>
-                <pre>pm2 logs
-pm2 list
-pm2 status
-sudo nginx -t</pre>
+                <div class="sub-title">⚙️ PM2</div>
+                <pre><span class="cmd">pm2 start ecosystem.config.cjs</span>
+<span class="cmd">pm2 list</span>
+<span class="cmd">pm2 logs finflow-backend --lines 50</span>
+<span class="cmd">pm2 restart finflow-backend</span>
+<span class="cmd">pm2 stop finflow-backend</span>
+<span class="cmd">pm2 monit</span>
+<span class="cmd">pm2 save && pm2 startup</span>
+<span class="cmd">pm2 flush</span></pre>
             </div>
             <div>
-                <div class="sub-title">Redis Check</div>
-                <pre>redis-cli ping
-redis-cli monitor</pre>
+                <div class="sub-title">🌐 Nginx</div>
+                <pre><span class="cmd">sudo nginx -t</span>
+<span class="cmd">sudo systemctl restart nginx</span>
+<span class="cmd">sudo systemctl status nginx</span>
+<span class="cmd">sudo tail -f /var/log/nginx/error.log</span>
+<span class="cmd">sudo tail -f /var/log/nginx/access.log</span>
+<span class="cmd">sudo nginx -s reload</span></pre>
+            </div>
+            <div>
+                <div class="sub-title">🗄️ PostgreSQL</div>
+                <pre><span class="cmd">sudo -u postgres psql</span>
+\l   <span class="comment">-- list databases</span>
+\c finflow_ai  <span class="comment">-- connect</span>
+\dt  <span class="comment">-- list tables</span>
+\d users  <span class="comment">-- describe</span>
+SELECT * FROM users;  <span class="comment">-- query</span></pre>
+            </div>
+            <div>
+                <div class="sub-title">📦 Redis</div>
+                <pre><span class="cmd">redis-cli ping</span>  <span class="ok">→ PONG</span>
+<span class="cmd">redis-cli KEYS "*"</span>
+<span class="cmd">redis-cli MONITOR</span>
+<span class="cmd">redis-cli GET "rl:127.0.0.1"</span>
+<span class="cmd">redis-cli FLUSHALL</span>  <span class="err">(careful!)</span>
+<span class="cmd">sudo systemctl status redis-server</span></pre>
+            </div>
+            <div>
+                <div class="sub-title">🔄 Deploy One-Liner</div>
+                <pre><span class="cmd">cd ~/finflow-ai-backend && git pull && npm install && npx prisma generate && npx prisma migrate deploy && pm2 restart finflow-backend</span></pre>
+                <div class="sub-title">🩺 Diagnostics</div>
+                <pre><span class="cmd">df -h</span>  <span class="comment"># disk</span>
+<span class="cmd">free -h</span>  <span class="comment"># memory</span>
+<span class="cmd">htop</span>  <span class="comment"># CPU</span>
+<span class="cmd">sudo lsof -i :3000</span>  <span class="comment"># port</span>
+<span class="cmd">sudo netstat -tulpn</span>  <span class="comment"># listeners</span>
+<span class="cmd">journalctl -xe</span>  <span class="comment"># system log</span></pre>
             </div>
         </div>
+    </div>
+
+    <!-- ===== TROUBLESHOOTING ===== -->
+    <div class="card">
+        <div class="card-title">🔧 Troubleshooting <span class="badge badge-orange">Common Fixes</span></div>
+        <div class="grid-2">
+            <div class="qa-box"><strong>🚫 Redis not found</strong><p><strong>Fix:</strong> <code>sudo systemctl start redis-server</code>. Falls back to MemoryStore.</p></div>
+            <div class="qa-box"><strong>🔴 Prisma migration fail</strong><p><strong>Fix:</strong> <code>npx prisma db push</code> or <code>npx prisma migrate resolve --applied <name></code></p></div>
+            <div class="qa-box"><strong>🔄 PM2 crashed</strong><p><strong>Fix:</strong> <code>pm2 logs finflow-backend --lines 100</code>. Common: missing env, DB down, port in use.</p></div>
+            <div class="qa-box"><strong>🌐 502 Bad Gateway</strong><p><strong>Fix:</strong> <code>pm2 list</code> → <code>pm2 restart finflow-backend</code>. Check <code>sudo nginx -t</code>.</p></div>
+            <div class="qa-box"><strong>🔑 JWT_SECRET missing</strong><p><strong>Fix:</strong> <code>node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</code>. Add to .env. PM2 restart.</p></div>
+            <div class="qa-box"><strong>📦 S3 upload fails</strong><p><strong>Fix:</strong> Check AWS creds in .env. Verify bucket & region. Test: <code>aws s3 ls s3://finflow-assets</code></p></div>
+        </div>
+    </div>
+
+    <!-- ===== FAQ ===== -->
+    <div class="card">
+        <div class="card-title">❓ FAQ <span class="badge">Q&A</span></div>
+        <div class="qa-box"><strong>Q: How to add a new module?</strong><p><strong>A:</strong> 1. Update <code>prisma/schema.prisma</code> → migrate. 2. Create Repository. 3. Create module (routes/controllers/services/validators). 4. Register in <code>src/app.js</code>.</p></div>
+        <div class="qa-box"><strong>Q: Why separate Repositories from Services?</strong><p><strong>A:</strong> Separation of Concerns. Services decide WHAT to do, Repositories handle HOW to fetch/save. Easier testing + modularity.</p></div>
+        <div class="qa-box"><strong>Q: Why 1-hour S3 presigned URLs?</strong><p><strong>A:</strong> Security — if leaked, URL expires in 60 minutes. Protects sensitive documents and videos.</p></div>
+        <div class="qa-box"><strong>Q: How does refresh token rotation work?</strong><p><strong>A:</strong> Each refresh issues a new token & revokes the old one. Theft detection: if a compromised token is used after rotation, all sessions are revoked.</p></div>
+        <div class="qa-box"><strong>Q: Do rate limits reset on server restart?</strong><p><strong>A:</strong> With Redis → persist. With MemoryStore → reset. Production uses Redis, so limits survive restarts.</p></div>
     </div>
 
     <!-- ===== FOOTER ===== -->
     <div class="footnote">
-        <p>📌 All architecture, configs, and patterns are verified for <strong>FinFlow AI</strong> backend.<br>
-        ✨ Built with ❤️ by <strong>Sumit</strong> · July 2026</p>
+        <p>📌 Verified for <strong>FinFlow AI</strong> backend &nbsp;·&nbsp; 🌐 <a href="http://56.228.4.142:3000/api-docs" style="color:#1f4e79;">http://56.228.4.142:3000/api-docs</a><br>✨ Built with ❤️ by <strong>Sumit</strong> · July 2026</p>
     </div>
 
 </div>
