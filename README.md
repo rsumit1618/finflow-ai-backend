@@ -266,7 +266,7 @@ JWT_SECRET=generated_secret_here
 
 ### Step 1: Login to EC2
 ```bash
-ssh -i finflow-ai-key.pem ubuntu@16.171.113.12
+ssh -i finflow-ai-key.pem ubuntu@56.228.4.142
 ```
 
 ### Step 2: Install Dependencies
@@ -311,7 +311,7 @@ upstream finflow_backend {
 
 server {
     listen 80;
-    server_name 16.171.113.12;
+    server_name 56.228.4.142;
 
     location / {
         proxy_pass http://finflow_backend;

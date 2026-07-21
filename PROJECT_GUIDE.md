@@ -73,7 +73,7 @@ CORS_ORIGIN="http://localhost:3000"
 Interactive API documentation is available for both local and production environments. Use the **Authorize** button to test JWT-protected routes.
 
 - **Local:** [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-- **AWS Production:** [http://16.171.113.12:3000/api-docs](http://16.171.113.12:3000/api-docs)
+- **AWS Production:** [http://56.228.4.142:3000/api-docs](http://56.228.4.142:3000/api-docs)
 
 ---
 
