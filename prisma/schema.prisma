@@ -85,6 +85,7 @@ model Qualification {
 model Video {
   id            Int      @id @default(autoincrement())
   userId        String   @db.VarChar(16)
+  user          User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   fileName      String   @db.VarChar(255)
   fileSize      Int
   s3Key         String   @db.VarChar(500)

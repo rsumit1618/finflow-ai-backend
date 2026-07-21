@@ -8,6 +8,7 @@ import {
   findUserByEmail,
   findUserByUserId,
   findAllQualifications,
+  generateUserId,
   updateUserById,
   updateUserPassword,
   findProfileByUserId,
@@ -99,7 +100,7 @@ export const registerUserService = async (userData) => {
 };
 
 export const loginUserService = async (loginData) => {
-  const user = await findUserByEmail(loginData.email);
+  let user = await findUserByEmail(loginData.email);
   if (!user) {
     throw new AppError("Invalid email or password", 401);
   }
@@ -107,6 +108,12 @@ export const loginUserService = async (loginData) => {
   const isPasswordValid = await bcrypt.compare(loginData.password, user.passwordHash);
   if (!isPasswordValid) {
     throw new AppError("Invalid email or password", 401);
+  }
+
+  // Auto-generate userId if missing (legacy users or manual DB entries)
+  if (!user.userId) {
+    const newUserId = generateUserId();
+    user = await updateUserById(user.id, { userId: newUserId });
   }
 
   const tokens = await createAuthTokens(user);
