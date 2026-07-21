@@ -52,31 +52,41 @@ export const uploadMultipleVideos = async (files, userId) => {
     const s3Key = `${userId}/videos/${timestamp}-${file.originalname}`;
 
     // Upload file buffer to S3
-    await uploadFile(file.buffer, s3Key, file.mimetype);
+    try {
+      await uploadFile(file.buffer, s3Key, file.mimetype);
+    } catch (s3Error) {
+      console.error(`S3 Upload Error for ${file.originalname}:`, s3Error);
+      throw new AppError(`Failed to upload "${file.originalname}" to storage`, 500);
+    }
 
     // Get presigned URL for immediate access
     const s3Url = await getPresignedUrl(s3Key);
 
     // Save to database
-    const video = await createVideo({
-      userId,
-      fileName: file.originalname,
-      fileSize: file.size,
-      s3Key,
-      s3Url,
-      mimeType: file.mimetype,
-      format,
-    });
+    try {
+      const video = await createVideo({
+        userId,
+        fileName: file.originalname,
+        fileSize: file.size,
+        s3Key,
+        s3Url,
+        mimeType: file.mimetype,
+        format,
+      });
 
-    uploadResults.push({
-      id: video.id,
-      fileName: video.fileName,
-      fileSize: video.fileSize,
-      format: video.format,
-      mimeType: video.mimeType,
-      createdAt: video.createdAt,
-      url: s3Url,
-    });
+      uploadResults.push({
+        id: video.id,
+        fileName: video.fileName,
+        fileSize: video.fileSize,
+        format: video.format,
+        mimeType: video.mimeType,
+        createdAt: video.createdAt,
+        url: s3Url,
+      });
+    } catch (dbError) {
+      console.error(`Database Error for ${file.originalname}:`, dbError);
+      throw new AppError(`Failed to save video metadata for "${file.originalname}"`, 500);
+    }
   }
 
   return { videos: uploadResults, totalUploaded: uploadResults.length };
