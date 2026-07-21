@@ -71,8 +71,28 @@ const thumbnailUpload = multer({
  *     responses:
  *       201:
  *         description: Videos uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         videos:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/Video'
+ *                         totalUploaded:
+ *                           type: integer
  *       400:
- *         description: Validation error
+ *         description: Validation error or no files uploaded
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/videos', authMiddleware, videoUpload.array('videos', 5), handleMultipleVideoUpload);
 
@@ -80,7 +100,7 @@ router.post('/videos', authMiddleware, videoUpload.array('videos', 5), handleMul
  * @swagger
  * /upload/videos:
  *   get:
- *     summary: Get all user videos with pagination (10 per page), sorted by newest first
+ *     summary: Get all user videos with pagination (10 per page)
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -90,14 +110,32 @@ router.post('/videos', authMiddleware, videoUpload.array('videos', 5), handleMul
  *         schema:
  *           type: integer
  *           default: 1
+ *         description: Page number
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *           default: 10
+ *         description: Number of items per page
  *     responses:
  *       200:
  *         description: Videos fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         videos:
+ *                           type: array
+ *                           items:
+ *                             $ref: '#/components/schemas/Video'
+ *                         pagination:
+ *                           $ref: '#/components/schemas/Pagination'
  */
 router.get('/videos', authMiddleware, getUserVideos);
 
@@ -105,7 +143,7 @@ router.get('/videos', authMiddleware, getUserVideos);
  * @swagger
  * /upload/videos/{id}:
  *   get:
- *     summary: Get a single video by ID with presigned URLs
+ *     summary: Get a single video by ID
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -115,11 +153,25 @@ router.get('/videos', authMiddleware, getUserVideos);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Video ID
  *     responses:
  *       200:
  *         description: Video fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Video'
  *       404:
- *         description: Video not found
+ *         description: Video not found or access denied
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/videos/:id', authMiddleware, getVideoById);
 
@@ -127,7 +179,7 @@ router.get('/videos/:id', authMiddleware, getVideoById);
  * @swagger
  * /upload/videos/{id}:
  *   delete:
- *     summary: Delete a video (removes from S3 + soft delete)
+ *     summary: Delete a video
  *     tags: [Upload]
  *     security:
  *       - bearerAuth: []
@@ -137,9 +189,16 @@ router.get('/videos/:id', authMiddleware, getVideoById);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Video ID
  *     responses:
  *       200:
  *         description: Video deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       404:
+ *         description: Video not found or access denied
  */
 router.delete('/videos/:id', authMiddleware, deleteUserVideo);
 
@@ -157,6 +216,7 @@ router.delete('/videos/:id', authMiddleware, deleteUserVideo);
  *         required: true
  *         schema:
  *           type: integer
+ *         description: Video ID
  *     requestBody:
  *       required: true
  *       content:
@@ -170,8 +230,24 @@ router.delete('/videos/:id', authMiddleware, deleteUserVideo);
  *     responses:
  *       201:
  *         description: Thumbnail uploaded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         id: { type: integer }
+ *                         thumbnailKey: { type: string }
+ *                         thumbnailUrl: { type: string }
+ *       400:
+ *         description: Validation error or no file uploaded
+ *       404:
+ *         description: Video not found or access denied
  */
 router.post('/videos/:id/thumbnail', authMiddleware, thumbnailUpload.single('thumbnail'), uploadVideoThumbnail);
 
 export default router;
-
