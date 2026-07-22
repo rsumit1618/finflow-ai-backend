@@ -11,6 +11,7 @@ import {
   ALLOWED_VIDEO_EXTENSIONS,
   getFileExtension,
   MAX_VIDEO_FILES,
+  MAX_VIDEO_TOTAL_BYTES,
 } from '../validators/uploadValidator.js';
 
 // ═══════════════════════════════════════════
@@ -41,6 +42,17 @@ export const uploadMultipleVideos = async (files, userId) => {
         400
       );
     }
+  }
+
+  // Validate total file size
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+  if (totalBytes > MAX_VIDEO_TOTAL_BYTES) {
+    const maxMB = MAX_VIDEO_TOTAL_BYTES / (1024 * 1024);
+    const totalMB = (totalBytes / (1024 * 1024)).toFixed(2);
+    throw new AppError(
+      `Total file size (${totalMB}MB) exceeds the maximum allowed (${maxMB}MB)`,
+      400
+    );
   }
 
   const uploadResults = [];
