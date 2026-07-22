@@ -88,14 +88,14 @@ model Video {
   user          User     @relation(fields: [userId], references: [userId], onDelete: Cascade)
   fileName      String   @db.VarChar(255)
   fileSize      Int
-  s3Key         String   @db.VarChar(500)
-  s3Url         String   @db.VarChar(500)
+  s3Key         String   @db.Text
+  s3Url         String   @db.Text
   mimeType      String   @db.VarChar(100)
   duration      Float?
   resolution    String?  @db.VarChar(50)
   format        String?  @db.VarChar(20)
-  thumbnailKey  String?  @db.VarChar(500)
-  thumbnailUrl  String?  @db.VarChar(500)
+  thumbnailKey  String?  @db.Text
+  thumbnailUrl  String?  @db.Text
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

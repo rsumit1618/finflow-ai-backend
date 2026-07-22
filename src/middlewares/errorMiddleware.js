@@ -1,6 +1,8 @@
 import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
+import { MulterError } from "multer";
 import * as Sentry from "@sentry/node";
+import { env } from "../config/env.js";
 
 export const notFoundHandler = (req, res) => {
   res.status(404).json({
@@ -24,6 +26,36 @@ export const globalErrorHandler = async (err, req, res, _next) => {
     statusCode = err.statusCode || 500;
     message = err.message;
     details = err.details;
+  } else if (err instanceof MulterError) {
+    statusCode = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    switch (err.code) {
+      case "LIMIT_FILE_SIZE":
+        message = "File too large. Maximum file size is 500MB per video.";
+        break;
+      case "LIMIT_FILE_COUNT":
+        message = "Too many files. Maximum 5 videos per upload.";
+        break;
+      case "LIMIT_UNEXPECTED_FILE":
+        message = `Unexpected field: "${err.field}". Use the field name "videos" for uploads.`;
+        break;
+      case "LIMIT_FIELD_KEY":
+        message = "Field name too long.";
+        break;
+      case "LIMIT_PART_COUNT":
+        message = "Too many form parts.";
+        break;
+      default:
+        message = err.message || "File upload error";
+    }
+    details = { code: err.code, field: err.field };
+  } else if (err.code === "P2000") {
+    statusCode = 400;
+    message = "Value too long for database column";
+    details = {
+      model: err.meta?.modelName || "Unknown",
+      column: err.meta?.column_name || "Unknown",
+      hint: "This is often caused by an S3 presigned URL or video path exceeding the column length limit.",
+    };
   } else if (err.code === "P2002") {
     statusCode = 409;
     message = "Duplicate record";
@@ -45,5 +77,8 @@ export const globalErrorHandler = async (err, req, res, _next) => {
     success: false,
     message,
     ...(details ? { details } : {}),
+    ...(statusCode >= 500 && env.nodeEnv !== "production"
+      ? { error: err.message, stack: err.stack }
+      : {}),
   });
 };
